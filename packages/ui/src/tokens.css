@@ -1,0 +1,155 @@
+/* FamilyTree design tokens — elevated visual design matching gursha & lehulu-living.
+   Semantic tokens only; components never reference raw hues directly. */
+
+:root {
+  /* Heritage warm ivory & parchment base (inspired by Lehulu-Living & Gursha) */
+  --color-surface: #faf6f0;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #f1eae0;
+  --color-text: #231913;
+  --color-text-muted: #5e4e42;
+  --color-text-faint: #8e7c6d;
+
+  /* Signature terracotta & spiced ember (Lehulu-Living inspired) */
+  --color-brand: #c65322;
+  --color-brand-deep: #9e3d14;
+  --color-brand-light: #faefe8;
+  --color-accent: #c65322;
+  --color-accent-strong: #9e3d14;
+  --color-accent-soft: #fdeee5;
+
+  /* Saffron gold & brass highlights (Gursha logo & Ethiopian royal accents) */
+  --color-gold: #df9732;
+  --color-gold-bright: #f5ad45;
+  --color-gold-soft: #fcf3e6;
+  --color-accent-2: #df9732;
+
+  /* Ethiopian teff & walnut */
+  --color-walnut: #4a3424;
+  --color-boucle: #f5eedf;
+
+  --color-danger: #b83321;
+  --color-danger-soft: #fbeae7;
+  --color-success: #356e48;
+  --color-success-soft: #e5f2e9;
+
+  --color-border: #e6dacb;
+  --color-border-strong: #ccbcab;
+  --color-focus: #df9732;
+
+  /* Tree & Kinship visual language */
+  --tree-edge: #d8c8b4;
+  --tree-edge-highlight: #c65322;
+  --tree-edge-glow: rgba(223, 151, 50, 0.4);
+  --tree-node-bg: #ffffff;
+  --tree-node-border: #e6dacb;
+  --tree-node-selected: #c65322;
+  --tree-dim-opacity: 0.18;
+
+  /* Layered artisanal shadows for tactile depth */
+  --shadow-1: 0 1px 3px rgb(35 25 19 / 0.05), 0 2px 6px rgb(35 25 19 / 0.04);
+  --shadow-2: 0 4px 16px rgb(35 25 19 / 0.08), 0 2px 8px rgb(35 25 19 / 0.05);
+  --shadow-3: 0 16px 40px rgb(35 25 19 / 0.12), 0 6px 16px rgb(35 25 19 / 0.06);
+  --shadow-glow: 0 0 24px rgba(223, 151, 50, 0.25);
+
+  /* Frosted glassmorphism surfaces */
+  --glass-bg: color-mix(in srgb, var(--color-surface-raised) 75%, transparent);
+  --glass-border: color-mix(in srgb, var(--color-border) 60%, transparent);
+  --glass-blur: 16px;
+
+  /* Corner radius */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 36px;
+  --radius-full: 9999px;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* Award-winning typography palette */
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-editorial: 'Bricolage Grotesque', sans-serif;
+  --font-serif: 'Instrument Serif', 'Source Serif 4', Georgia, serif;
+  --font-ge: 'Noto Serif Ethiopic', 'Nyala', serif;
+  --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2.25rem;
+  --text-3xl: 3rem;
+
+  /* Monumental fluid heading clamp sizes */
+  --h1-size: clamp(2.8rem, 2rem + 4.5vw, 5.2rem);
+  --h2-size: clamp(1.85rem, 1.4rem + 2.5vw, 3.2rem);
+  --h3-size: clamp(1.3rem, 1.1rem + 1.2vw, 2rem);
+
+  --touch: 44px;
+  --speed: 240ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.25, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+[data-theme='dark'] {
+  --color-surface: #140d08;
+  --color-surface-raised: #1f150e;
+  --color-surface-sunken: #0c0704;
+  --color-text: #f7efe6;
+  --color-text-muted: #baa999;
+  --color-text-faint: #877768;
+  --color-brand: #e0743e;
+  --color-brand-deep: #f28b55;
+  --color-brand-light: #2c190f;
+  --color-accent: #e0743e;
+  --color-accent-strong: #f69d6b;
+  --color-accent-soft: #382013;
+  --color-gold: #ebb15b;
+  --color-gold-bright: #fcd080;
+  --color-gold-soft: #362612;
+  --color-accent-2: #ebb15b;
+  --color-danger: #e66b57;
+  --color-danger-soft: #3d1b15;
+  --color-success: #67b07d;
+  --color-success-soft: #172d1f;
+  --color-border: #3d2b1f;
+  --color-border-strong: #593f2f;
+  --color-focus: #ebb15b;
+
+  --tree-edge: #573f2e;
+  --tree-edge-highlight: #e0743e;
+  --tree-edge-glow: rgba(235, 177, 91, 0.45);
+  --tree-node-bg: #1f150e;
+  --tree-node-border: #3d2b1f;
+  --tree-node-selected: #e0743e;
+
+  --shadow-1: 0 2px 4px rgb(0 0 0 / 0.4);
+  --shadow-2: 0 6px 20px rgb(0 0 0 / 0.5);
+  --shadow-3: 0 20px 48px rgb(0 0 0 / 0.65);
+  --shadow-glow: 0 0 32px rgba(235, 177, 91, 0.2);
+
+  --glass-bg: color-mix(in srgb, #1f150e 82%, transparent);
+  --glass-border: color-mix(in srgb, #3d2b1f 70%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --speed: 0ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

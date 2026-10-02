@@ -1,0 +1,27 @@
+{
+  "name": "familytree",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev --workspace @ft/web",
+    "build": "npm run build --workspace @ft/web",
+    "typecheck": "tsc --noEmit -p apps/web && tsc --noEmit -p packages/domain && tsc --noEmit -p packages/ui",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed": "node apps/web/scripts/seed-check.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^3.2.4",
+    "@vitest/coverage-v8": "^3.2.4",
+    "jsdom": "^26.1.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/user-event": "^14.6.1"
+  }
+}

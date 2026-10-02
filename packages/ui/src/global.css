@@ -1,0 +1,256 @@
+@import './tokens.css';
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 4rem;
+}
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+  color: var(--color-text);
+  background:
+    radial-gradient(1200px 540px at 82% -10%, color-mix(in srgb, var(--color-accent) 5%, transparent), transparent 55%),
+    radial-gradient(900px 460px at 18% 110%, color-mix(in srgb, var(--color-accent-2) 4%, transparent), transparent 60%),
+    repeating-radial-gradient(circle, color-mix(in srgb, var(--color-text) 2%, transparent) 1px, transparent 2px) 0 0/28px 28px,
+    var(--color-surface);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Custom cursor ---------- */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-accent) 60%, transparent);
+  border: 2px solid var(--color-accent-strong);
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease-out, background 0.2s ease;
+  opacity: 0;
+}
+.cursor-dot--visible {
+  opacity: 0.6;
+}
+.cursor-dot--hover {
+  transform: translate(-50%, -50%) scale(2);
+  background: var(--color-accent-strong);
+  border-color: var(--color-accent);
+  opacity: 0.8;
+}
+
+.cursor-active {
+  cursor: none;
+}
+
+/* Refined typography hierarchy — award-winning editorial typography */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-3);
+  color: var(--color-text);
+}
+
+h1 { font-size: var(--h1-size); }
+h2 { font-size: var(--h2-size); }
+h3 { font-size: var(--h3-size); }
+
+.font-display {
+  font-family: var(--font-display);
+}
+.font-editorial {
+  font-family: var(--font-editorial);
+  letter-spacing: -0.015em;
+}
+.font-ge, [lang="am"] {
+  font-family: var(--font-ge);
+  letter-spacing: 0;
+}
+.italic-serif {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.text-gradient-brand {
+  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, var(--color-gold-bright) 0%, var(--color-gold) 50%, var(--color-brand) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-2);
+}
+
+.tilt-card {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.line-mask {
+  overflow: hidden;
+  display: block;
+}
+
+p { margin: 0 0 var(--space-3); }
+
+a { color: var(--color-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.ft-link {
+  background: none;
+  border: none;
+  color: var(--color-brand);
+  font-weight: 600;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+.ft-link:hover { text-decoration: underline; }
+
+/* Selection uses brand soft fill for a polished feel */
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+/* Refined focus ring — softer, thicker */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+img { max-width: 100%; display: block; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+[hidden] { display: none !important; }
+
+/* visually-hidden: standard pattern for screen-reader-only text */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%);
+  overflow: hidden; white-space: nowrap;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  background: var(--color-accent);
+  color: #fff;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  transform: translateY(-120%);
+  transition: transform var(--speed) var(--ease);
+}
+.skip-link:focus { transform: translateY(0); }
+
+/* Smooth scrolling for anchor links */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Reveal animation utility — elements fade+lift on mount */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 500ms var(--ease), transform 500ms var(--ease);
+}
+.reveal--delayed { transition-delay: 100ms; }
+.reveal--delayed-2 { transition-delay: 200ms; }
+.reveal--delayed-3 { transition-delay: 300ms; }
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- Decorative background patterns (CSS-only, no images) ---------- */
+
+/* Subtle parchment texture — fine diagonal lines */
+.bg-paper {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      color-mix(in srgb, var(--color-border) 4%, transparent),
+      color-mix(in srgb, var(--color-border) 4%, transparent) 2px,
+      color-mix(in srgb, var(--color-border) 6%, transparent) 2px,
+      color-mix(in srgb, var(--color-border) 6%, transparent) 4px
+    );
+}
+
+/* Gradient orb — a soft, warm glow used as a pseudo-element or background */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+.orb--primary {
+  width: 520px; height: 520px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 40%, transparent) 0%, transparent 60%);
+}
+.orb--secondary {
+  width: 360px; height: 360px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent-2) 35%, transparent) 0%, transparent 60%);
+}
+.orb--floating {
+  will-change: transform;
+}
+
+/* Section spacing — generous vertical padding */
+.section {
+  padding: var(--space-7) var(--space-6);
+}
+@media (max-width: 768px) {
+  .section { padding: var(--space-6) var(--space-4); }
+}
+
+/* Container — max-width with responsive padding */
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+/* ---------- Page width constraints ---------- */
+.content {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+}
