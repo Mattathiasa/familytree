@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { family as familyApi, livingStatusOf, livingTally, personLabel } from '../api/client';
 import type { PersonDto, RelationshipDto } from '../api/types';
@@ -9,7 +9,9 @@ import {
   layoutTree, treePersonLabel, treePersonLifespan,
   type LayoutResult, type PositionedEdge, type TreeEdge, type TreePerson,
 } from '../tree/layout';
-import { TreeConstellation3D } from './TreeConstellation3D';
+const TreeConstellation3D = lazy(() =>
+  import('./TreeConstellation3D').then((m) => ({ default: m.TreeConstellation3D })),
+);
 import './tree.css';
 
 interface Transform { x: number; y: number; k: number }
@@ -53,7 +55,17 @@ export function TreeScreen() {
   const [direction, setDirection] = useState<'descendant' | 'ancestor'>('descendant');
   const [selectedId, setSelectedId] = useState<string | null>(params.get('focus'));
   const [query, setQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'2d' | '3d' | 'list'>('2d');
+  const reducedMotion = usePrefersReducedMotion();
+  const [viewMode, setViewMode] = useState<'2d' | '3d' | 'list'>(() => {
+    const requested = params.get('view');
+    // Dashboard, People and PersonProfile all link here with ?view=3d. An
+    // animated canvas is not what someone asking for reduced motion wants
+    // arriving unbidden from a link, so the URL cannot opt them in — the view
+    // switcher still can, because that is their own deliberate choice.
+    if (requested === '3d') return reducedMotion ? '2d' : '3d';
+    if (requested === 'list' || requested === '2d') return requested;
+    return '2d';
+  });
   const [statusFilter, setStatusFilter] = useState<'all' | 'living' | 'ancestor'>('all');
   const [addTarget, setAddTarget] = useState<{ person: PersonDto; rel: 'parent' | 'child' | 'spouse' } | null>(null);
 
@@ -202,13 +214,15 @@ export function TreeScreen() {
           onOpen={(id) => nav(`/f/${familyId}/people/${id}`)}
         />
       ) : viewMode === '3d' ? (
-        <TreeConstellation3D
-          people={people}
-          rels={rels}
-          selectedId={selectedId}
-          onSelect={(id) => setSelectedId(id)}
-          onOpen={(id) => nav(`/f/${familyId}/people/${id}`)}
-        />
+        <Suspense fallback={<div className="page-loading" aria-busy="true" aria-label="Loading the constellation view" />}>
+          <TreeConstellation3D
+            people={people}
+            rels={rels}
+            selectedId={selectedId}
+            onSelect={(id) => setSelectedId(id)}
+            onOpen={(id) => nav(`/f/${familyId}/people/${id}`)}
+          />
+        </Suspense>
       ) : (
         <TreeCanvas
           layout={layout!}
