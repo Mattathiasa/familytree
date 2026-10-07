@@ -665,6 +665,11 @@ export function canEditPerson(role: Role | null, p: PersonDto, user: SessionUser
   return can('edit', { role, visibility: p.visibility, isAuthor: p.createdBy === user.id });
 }
 
+export function canDeletePerson(role: Role | null, p: PersonDto, user: SessionUser | null): boolean {
+  if (!role || !user) return false;
+  return can('delete', { role, visibility: p.visibility, isAuthor: p.createdBy === user.id });
+}
+
 export function roleAtLeastHelper(role: Role | null, min: Role): boolean {
   return role ? roleAtLeast(role, min) : false;
 }

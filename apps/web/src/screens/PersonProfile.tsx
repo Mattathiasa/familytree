@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { family as familyApi, personLabel } from '../api/client';
+import { canDeletePerson, canEditPerson, family as familyApi, personLabel } from '../api/client';
 import type { ChangeRecordDto, MemoryDto, PersonDto, RelativeGroups, StoryDto } from '../api/types';
 import { Avatar, Badge, Button, Card, Modal, Skeleton, useToast } from '@ft/ui';
 import { convertYear, formatFamilyDate, lifespan, resolveLiving } from '@ft/domain';
+import { useApp } from '../app/store';
 
 function LifeLineDual({ p }: { p: PersonDto }) {
   const b = p.birthDate;
@@ -47,6 +48,8 @@ export function PersonProfile() {
   const { familyId, personId } = useParams();
   const nav = useNavigate();
   const toast = useToast();
+  const { user, roleFor } = useApp();
+  const role = roleFor(familyId);
   const [p, setP] = useState<PersonDto | null>(null);
   const [rel, setRel] = useState<RelativeGroups | null>(null);
   const [history, setHistory] = useState<ChangeRecordDto[] | null>(null);
@@ -121,6 +124,19 @@ export function PersonProfile() {
   const name = personLabel(p);
   const memoryCount = (memories?.length ?? 0) + (stories?.length ?? 0);
 
+  /* A Viewer may read a profile and must not be offered Edit or Remove.
+     The predicates are the same ones the server mirrors (@ft/domain `can`);
+     this is a convenience, not the control (README conventions). */
+  const canEdit = canEditPerson(role, p, user);
+  const canDelete = canDeletePerson(role, p, user);
+
+  /* PersonEdit reads ?add= and ?person= to create a new person and link them
+     in one step (PersonEdit.tsx:47–52). The only link in the app that used
+     that contract pointed at this person's own edit route and omitted
+     &person=, so it opened an edit form instead of adding anyone. */
+  const addRelativeTo = (kind: 'parent' | 'spouse' | 'child') =>
+    `/f/${familyId}/people/new?add=${kind}&person=${p.id}`;
+
   return (
     <div className="profile">
       {/* Luxury Profile Hero */}
@@ -162,12 +178,16 @@ export function PersonProfile() {
             <Link to={`/f/${familyId}/tree?focus=${p.id}`} className="ft-btn ft-btn--secondary" title="View in 2D Tree">
               🌳 View in Tree
             </Link>
-            <Link to={`/f/${familyId}/people/${p.id}/edit`} className="ft-btn ft-btn--secondary">
-              Edit
-            </Link>
-            <Button variant="danger" onClick={() => setConfirmDelete(true)}>
-              Remove
-            </Button>
+            {canEdit && (
+              <Link to={`/f/${familyId}/people/${p.id}/edit`} className="ft-btn ft-btn--secondary">
+                Edit
+              </Link>
+            )}
+            {canDelete && (
+              <Button variant="danger" onClick={() => setConfirmDelete(true)}>
+                Remove
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -289,7 +309,7 @@ export function PersonProfile() {
                 ))}
                 {rel.parents.length === 0 && (
                   <span className="muted small">
-                    None recorded. <Link to={`/f/${familyId}/people/${p.id}/edit?add=parent`}>Add a parent</Link>
+                    None recorded.{canEdit && <> <Link to={addRelativeTo('parent')}>Add a parent</Link></>}
                   </span>
                 )}
               </RelRow>
@@ -298,14 +318,22 @@ export function PersonProfile() {
                 {rel.spouses.map(({ person, marriedDate }) => (
                   <FamilyChip key={person.id} familyId={familyId!} person={person} sub={marriedDate ? `m. ${formatFamilyDate(marriedDate)}` : undefined} />
                 ))}
-                {rel.spouses.length === 0 && <span className="muted small">None recorded.</span>}
+                {rel.spouses.length === 0 && (
+                  <span className="muted small">
+                    None recorded.{canEdit && <> <Link to={addRelativeTo('spouse')}>Add a spouse</Link></>}
+                  </span>
+                )}
               </RelRow>
 
               <RelRow label={rel.children.length === 1 ? 'Child' : 'Children'}>
                 {rel.children.map(({ person }) => (
                   <FamilyChip key={person.id} familyId={familyId!} person={person} />
                 ))}
-                {rel.children.length === 0 && <span className="muted small">None recorded.</span>}
+                {rel.children.length === 0 && (
+                  <span className="muted small">
+                    None recorded.{canEdit && <> <Link to={addRelativeTo('child')}>Add a child</Link></>}
+                  </span>
+                )}
               </RelRow>
 
               <RelRow label={rel.siblings.length === 1 ? 'Sibling' : 'Siblings'}>
