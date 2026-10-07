@@ -62,9 +62,10 @@ function requireUser(): SessionUser {
 /* ---------------- Auth (API.md §2) ---------------- */
 
 export const auth = {
-  async session(): Promise<{ user: SessionUser | null; families: MockDb['families'] }> {
+  async session(): Promise<{ user: SessionUser | null; families: MockDb['families']; activeFamilyId: string | null }> {
     await delay(80);
-    return { user: db.user, families: db.user ? db.families : [] };
+    if (!db.user) return { user: null, families: [], activeFamilyId: null };
+    return { user: db.user, families: db.families, activeFamilyId: db.activeFamilyId };
   },
 
   async register(input: { email: string; password: string; displayName: string }): Promise<SessionUser> {
@@ -587,6 +588,15 @@ export function familyDbCreate(name: string, description: string, id: string, li
   mutate((d) => {
     d.families.push({ id, name, description, role: 'owner', peopleCount: 0, coverGradient: d.families.length, lineage });
     d.activeFamilyId = id;
+  });
+}
+
+/* The family the user is currently working in. Survives a reload so returning to
+   /families or /account does not silently snap back to the first family. */
+export function familyDbSetActive(familyId: string): void {
+  if (db.activeFamilyId === familyId) return;
+  mutate((d) => {
+    if (d.families.some((f) => f.id === familyId)) d.activeFamilyId = familyId;
   });
 }
 

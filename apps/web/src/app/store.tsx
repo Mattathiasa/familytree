@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { auth, subscribe } from '../api/client';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
+import { auth, familyDbSetActive, subscribe } from '../api/client';
 import type { MockDb } from '../api/mock-db';
 import type { SessionUser } from '../api/types';
 import type { Role } from '@ft/domain';
@@ -24,38 +25,72 @@ export function useApp(): AppState {
   return useContext(Ctx);
 }
 
+/* Routes are /f/:familyId/… — the family in the URL is the family you are working in.
+   Exported so it can be unit-tested without a router. */
+export function familyIdFromPath(pathname: string): string | null {
+  return /^\/f\/([^/]+)/.exec(pathname)?.[1] ?? null;
+}
+
+interface Snapshot {
+  user: SessionUser | null;
+  families: MockDb['families'];
+  activeFamilyId: string | null;
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ user: SessionUser | null; families: MockDb['families'] }>({ user: null, families: [] });
+  const { pathname } = useLocation();
+  const [snap, setSnap] = useState<Snapshot>({ user: null, families: [], activeFamilyId: null });
   const [ready, setReady] = useState(false);
-  const [tick, setTick] = useState(0);
+  const pullRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     let alive = true;
-    auth.session().then((s) => {
-      if (!alive) return;
-      setState({ user: s.user, families: s.families });
-      setReady(true);
-    });
-    const unsub = subscribe(() => setTick((t) => t + 1));
+    const pull = () => {
+      void auth.session().then((s) => {
+        if (!alive) return;
+        // Copy the array so React sees a new identity after every mutation.
+        setSnap({ user: s.user, families: [...s.families], activeFamilyId: s.activeFamilyId });
+        setReady(true);
+      });
+    };
+    pullRef.current = pull;
+    pull();
+    const unsub = subscribe(pull);
     return () => { alive = false; unsub(); };
   }, []);
 
-  const familyId = state.families[0]?.id ?? null;
-  const needsOnboarding = state.user !== null && state.families.length === 0;
+  const isMember = (id: string | null | undefined): id is string =>
+    typeof id === 'string' && snap.families.some((f) => f.id === id);
+
+  /* URL wins, then the family last worked in, then whatever exists. */
+  const routeFamilyId = familyIdFromPath(pathname);
+  const familyId = isMember(routeFamilyId) ? routeFamilyId
+    : isMember(snap.activeFamilyId) ? snap.activeFamilyId
+    : snap.families[0]?.id ?? null;
+
+  useEffect(() => {
+    if (familyId && familyId !== snap.activeFamilyId) familyDbSetActive(familyId);
+  }, [familyId, snap.activeFamilyId]);
+
+  const needsOnboarding = snap.user !== null && snap.families.length === 0;
+
   const roleFor = (fid: string | null | undefined): Role | null => {
-    const f = state.families.find((x) => x.id === (fid ?? familyId));
+    const f = snap.families.find((x) => x.id === (fid ?? familyId));
     return f?.role ?? null;
+  };
+
+  const setFamilyId = (id: string): void => {
+    if (isMember(id)) familyDbSetActive(id);
   };
 
   return (
     <Ctx.Provider
       value={{
-        ready, user: state.user, families: state.families, familyId,
-        needsOnboarding, setFamilyId: () => {}, roleFor, refresh: () => setTick((t) => t + 1),
+        ready, user: snap.user, families: snap.families, familyId,
+        needsOnboarding, setFamilyId, roleFor, refresh: () => pullRef.current(),
       }}
     >
       {children}
-      <span hidden data-tick={tick} />
     </Ctx.Provider>
   );
 }
