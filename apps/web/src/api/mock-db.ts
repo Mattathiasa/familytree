@@ -141,8 +141,9 @@ export function seedDb(): MockDb {
   ];
 
   const history: ChangeRecordDto[] = [
-    { id: 'h1', field: 'birthDate', label: 'Birth year', oldValue: '1947', newValue: '1948', actorName: 'Tsehay Abebe', at: '2026-09-18T14:30:00Z' },
-    { id: 'h2', field: 'occupation', label: 'Occupation', oldValue: '—', newValue: 'Teacher', actorName: 'Sara Tesfaye', at: '2026-09-05T08:12:00Z' },
+    { id: 'h1', personId: 'p-abebe', field: 'birthDate', label: 'Birth year', oldValue: '1947', newValue: '1948', actorName: 'Tsehay Abebe', at: '2026-09-18T14:30:00Z' },
+    { id: 'h2', personId: 'p-abebe', field: 'occupation', label: 'Occupation', oldValue: '—', newValue: 'Teacher', actorName: 'Sara Tesfaye', at: '2026-09-05T08:12:00Z' },
+    { id: 'h3', personId: 'p-hana', field: 'occupation', label: 'Occupation', oldValue: '—', newValue: 'Weaver', actorName: 'Sara Tesfaye', at: '2026-09-06T11:40:00Z' },
   ];
 
   const activity: ActivityItemDto[] = [

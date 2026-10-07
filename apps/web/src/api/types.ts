@@ -64,6 +64,7 @@ export interface RelativeGroups {
 
 export interface ChangeRecordDto {
   id: string;
+  personId: string;
   field: string;
   label: string;
   oldValue: string;

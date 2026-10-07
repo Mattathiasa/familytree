@@ -100,6 +100,13 @@ describe('seed data', () => {
     }
   });
 
+  it('attributes every change record to a person who exists', () => {
+    expect(db.history.length).toBeGreaterThan(0);
+    for (const h of db.history) {
+      expect(personIds.has(h.personId), `history ${h.id} → ${h.personId}`).toBe(true);
+    }
+  });
+
   it('scopes every memory to a family that exists', () => {
     for (const m of db.memories) {
       expect(db.families.some((f) => f.id === m.familyId), `memory ${m.id}`).toBe(true);

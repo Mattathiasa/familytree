@@ -211,17 +211,29 @@ export const people = {
     }
     const changes: ChangeRecordDto[] = [];
     const record = (field: string, label: string, oldV: string, newV: string) => {
-      if (oldV !== newV) changes.push({ id: uid(), field, label, oldValue: oldV, newValue: newV, actorName: user.displayName, at: new Date().toISOString() });
+      if (oldV !== newV) changes.push({ id: uid(), personId, field, label, oldValue: oldV, newValue: newV, actorName: user.displayName, at: new Date().toISOString() });
     };
     const fd = (f: FamilyDate | null | undefined) => (f ? `${f.precision === 'circa' ? 'c. ' : ''}${f.year ?? ''}` : '—');
-    record('givenName', 'Given name', current.givenName, patch.givenName ?? current.givenName);
-    record('familyName', 'Family name', current.familyName ?? '', patch.familyName ?? current.familyName ?? '');
-    record('nickname', 'Nickname', current.nickname ?? '', patch.nickname ?? current.nickname ?? '');
-    record('birthDate', 'Birth date', fd(current.birthDate), fd(patch.birthDate ?? null));
-    record('deathDate', 'Death date', fd(current.deathDate), fd(patch.deathDate ?? null));
-    record('occupation', 'Occupation', current.occupation, patch.occupation ?? current.occupation);
-    record('biography', 'Biography', current.biography, patch.biography ?? current.biography);
-    record('birthPlace', 'Birth place', current.birthPlace, patch.birthPlace ?? current.birthPlace);
+
+    /* Only a field the patch actually carries can have changed. Reading
+       `patch.x ?? current.x` hid that for text but not for the dates, where
+       `patch.birthDate ?? null` turned an absent key into "cleared" — so
+       editing only an occupation logged a birth date being erased that the
+       write itself never touched. An audit trail that invents edits is worse
+       than none (spec §48). */
+    const sent = <K extends keyof PersonPatch>(key: K): boolean =>
+      Object.prototype.hasOwnProperty.call(patch, key);
+
+    if (sent('givenName')) record('givenName', 'Given name', current.givenName, patch.givenName ?? '');
+    if (sent('familyName')) record('familyName', 'Family name', current.familyName ?? '', patch.familyName ?? '');
+    if (sent('nickname')) record('nickname', 'Nickname', current.nickname ?? '', patch.nickname ?? '');
+    if (sent('birthDate')) record('birthDate', 'Birth date', fd(current.birthDate), fd(patch.birthDate));
+    if (sent('deathDate')) record('deathDate', 'Death date', fd(current.deathDate), fd(patch.deathDate));
+    if (sent('occupation')) record('occupation', 'Occupation', current.occupation, patch.occupation ?? '');
+    if (sent('biography')) record('biography', 'Biography', current.biography, patch.biography ?? '');
+    if (sent('birthPlace')) record('birthPlace', 'Birth place', current.birthPlace, patch.birthPlace ?? '');
+    if (sent('deathPlace')) record('deathPlace', 'Death place', current.deathPlace, patch.deathPlace ?? '');
+    if (sent('visibility')) record('visibility', 'Visibility', current.visibility, patch.visibility ?? current.visibility);
 
     const updated: PersonDto = { ...current, ...patch, version: current.version + 1, updatedAt: new Date().toISOString() };
     mutate((d) => {
@@ -249,8 +261,10 @@ export const people = {
   async history(familyId: string, personId: string): Promise<ChangeRecordDto[]> {
     await delay();
     requireUser();
-    void familyId;
-    return db.history.slice(0, 20);
+    // Refuse a person from another family rather than leaking their history.
+    const person = db.people.find((p) => p.familyId === familyId && p.id === personId);
+    if (!person) throw new ApiRequestError('NOT_FOUND', 'We couldn\'t find this person.');
+    return db.history.filter((h) => h.personId === personId).slice(0, 20);
   },
 };
 
