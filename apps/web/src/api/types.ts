@@ -38,6 +38,10 @@ export interface PersonDto {
   deathPlace: string;
   photoUrl: string | null;
   visibility: Visibility;
+  /* The account that has claimed this profile, if any. A person is not a user
+     (spec §16, §23) — historical people have no account — but a living member
+     may claim their own record, which is what makes "me" expressible. */
+  userId?: string | null;
   version: number;
   createdBy: string;
   createdAt: string;

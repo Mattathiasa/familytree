@@ -84,6 +84,7 @@ export function seedDb(): MockDb {
     P('p-sara', 'Sara', 'Tesfaye', y(1972), null, {
       gender: 'female', occupation: 'Nurse', birthPlace: 'Addis Ababa, Ethiopia',
       biography: 'The youngest of five, Sara moved to Addis for nursing school and stayed.',
+      userId: U, // the signed-in demo account has claimed this profile
     }),
     P('p-daniel', 'Daniel', 'Tesfaye', y(1970), null, {
       gender: 'male', occupation: 'Engineer', birthPlace: 'Addis Ababa, Ethiopia',

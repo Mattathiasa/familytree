@@ -1,18 +1,20 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { family as familyApi, livingStatusOf, livingTally, personLabel } from '../api/client';
+import { canAddPeople, claimedPerson, family as familyApi, livingStatusOf, livingTally, personLabel } from '../api/client';
 import type { PersonDto, RelationshipDto } from '../api/types';
 import { useApp } from '../app/store';
 import { Button, EmptyState, Input, Modal, useToast } from '@ft/ui';
-import { can, kinshipLabel, type FamilyDate, type GraphEdge } from '@ft/domain';
+import { kinshipLabel, type FamilyDate, type GraphEdge } from '@ft/domain';
 import {
   layoutTree, treePersonLabel, treePersonLifespan,
   type LayoutResult, type PositionedEdge, type TreeEdge, type TreePerson,
 } from '../tree/layout';
+import './tree.css';
+
+/* three.js and drei are heavy and only this view needs them. */
 const TreeConstellation3D = lazy(() =>
   import('./TreeConstellation3D').then((m) => ({ default: m.TreeConstellation3D })),
 );
-import './tree.css';
 
 interface Transform { x: number; y: number; k: number }
 
@@ -69,7 +71,13 @@ export function TreeScreen() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'living' | 'ancestor'>('all');
   const [addTarget, setAddTarget] = useState<{ person: PersonDto; rel: 'parent' | 'child' | 'spouse' } | null>(null);
 
-  const canWrite = !!user && !!role && can('edit', { role, visibility: 'family', isAuthor: true });
+  /* Adding a relative creates a new person, so the question is whether this
+     role may add people at all — not whether it may edit some notional
+     family-visible record it happens to author. The old check passed
+     isAuthor: true, which is simply untrue for a person who does not exist yet
+     and would wave a contributor through on records they do not own. */
+  const canWrite = !!user && canAddPeople(role);
+  const meId = claimedPerson(people ?? [], user)?.id ?? null;
 
   useEffect(() => {
     let alive = true;
@@ -244,7 +252,7 @@ export function TreeScreen() {
         <SelectionPopover
           familyId={familyId!}
           person={people.find((p) => p.id === selectedId) ?? null}
-          people={people}
+          meId={meId}
           edges={treeEdges}
           onClose={() => setSelectedId(null)}
           onOpen={() => nav(`/f/${familyId}/people/${selectedId}`)}
@@ -523,11 +531,12 @@ function matchesEdge(e: PositionedEdge, layout: LayoutResult, needle: string): b
 /* ------------------------------------------------------------------ */
 
 function SelectionPopover({
-  familyId, person, people, edges, onClose, onOpen, onAdd, canWrite,
+  familyId, person, meId, edges, onClose, onOpen, onAdd, canWrite,
 }: {
   familyId: string;
   person: PersonDto | null;
-  people: PersonDto[];
+  /** The person record the signed-in account has claimed, or null. */
+  meId: string | null;
   edges: TreeEdge[];
   onClose: () => void;
   onOpen: () => void;
@@ -535,7 +544,10 @@ function SelectionPopover({
   canWrite: boolean;
 }) {
   if (!person) return null;
-  const meId = people[0]?.id;
+  /* Kinship is relative to *you*, which needs a person record you have
+     claimed (spec §23). This used to read people[0] — an arbitrary array
+     element, usually a great-grandparent — so the label was a plausible-looking
+     fiction. With no claimed profile there is no "you", and no label. */
   const kin = meId && meId !== person.id
     ? kinshipLabel(edges.map((e) => ({ from: e.from, to: e.to, kind: e.kind })) as GraphEdge[], meId, person.id)
     : null;

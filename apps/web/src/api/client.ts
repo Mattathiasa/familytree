@@ -665,6 +665,18 @@ export function canEditPerson(role: Role | null, p: PersonDto, user: SessionUser
   return can('edit', { role, visibility: p.visibility, isAuthor: p.createdBy === user.id });
 }
 
+/** The person record this account has claimed, if any — i.e. "me" in the graph.
+    Without it there is no basis for a relative-to-you kinship label. */
+export function claimedPerson(list: PersonDto[], user: SessionUser | null): PersonDto | null {
+  if (!user) return null;
+  return list.find((p) => p.userId === user.id) ?? null;
+}
+
+/** Adding a person is a write on the family, not on any existing record. */
+export function canAddPeople(role: Role | null): boolean {
+  return roleAtLeastHelper(role, 'contributor');
+}
+
 export function canDeletePerson(role: Role | null, p: PersonDto, user: SessionUser | null): boolean {
   if (!role || !user) return false;
   return can('delete', { role, visibility: p.visibility, isAuthor: p.createdBy === user.id });

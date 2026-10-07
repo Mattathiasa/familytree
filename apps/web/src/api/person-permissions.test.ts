@@ -4,7 +4,7 @@
    copy is a convenience, not the control. */
 
 import { describe, expect, it } from 'vitest';
-import { canDeletePerson, canEditPerson } from './client';
+import { canAddPeople, canDeletePerson, canEditPerson, claimedPerson } from './client';
 import type { PersonDto, SessionUser } from './types';
 
 const user: SessionUser = {
@@ -57,5 +57,28 @@ describe('canDeletePerson', () => {
   it('allows admin and owner', () => {
     expect(canDeletePerson('admin', person(), user)).toBe(true);
     expect(canDeletePerson('owner', person(), user)).toBe(true);
+  });
+});
+
+describe('canAddPeople', () => {
+  it('needs contributor — adding a person is a write on the family', () => {
+    expect(canAddPeople(null)).toBe(false);
+    expect(canAddPeople('viewer')).toBe(false);
+    expect(canAddPeople('contributor')).toBe(true);
+    expect(canAddPeople('admin')).toBe(true);
+    expect(canAddPeople('owner')).toBe(true);
+  });
+});
+
+describe('claimedPerson', () => {
+  const list = [person({ id: 'p-1' }), person({ id: 'p-2', userId: 'u-1' })];
+
+  it('finds the record this account has claimed', () => {
+    expect(claimedPerson(list, user)?.id).toBe('p-2');
+  });
+
+  it('is null when nobody has claimed a profile, so no kinship is asserted', () => {
+    expect(claimedPerson([person({ id: 'p-1' })], user)).toBeNull();
+    expect(claimedPerson(list, null)).toBeNull();
   });
 });
