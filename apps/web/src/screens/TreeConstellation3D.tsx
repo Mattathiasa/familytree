@@ -5,6 +5,20 @@ import { OrbitControls, Sparkles, Html, Text } from '@react-three/drei';
 import type { PersonDto, RelationshipDto } from '../api/types';
 import { personLabel } from '../api/client';
 
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(
+    () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (!mq) return;
+    const on = () => setReduced(mq.matches);
+    mq.addEventListener?.('change', on);
+    return () => mq.removeEventListener?.('change', on);
+  }, []);
+  return reduced;
+}
+
 interface TreeConstellationProps {
   people: PersonDto[];
   rels: RelationshipDto[];
@@ -44,12 +58,15 @@ function ConstellationPoint({
 }) {
   const meshRef = useRef<THREE.Mesh>(null!);
   const [hovered, setHovered] = useState(false);
+  const reduced = usePrefersReducedMotion();
 
+  /* The other two canvases honour prefers-reduced-motion; this one pulsed every
+     star forever regardless. Selection and hover still change the size — that
+     is feedback, not decoration — but the idle animation stops. */
   useFrame(({ clock }) => {
     if (!meshRef.current) return;
-    const t = clock.elapsedTime;
     const scale = isSelected ? 1.4 : hovered ? 1.25 : 1.0;
-    const pulse = 1 + Math.sin(t * 3 + Number(node.id.slice(-2) || 1)) * 0.06;
+    const pulse = reduced ? 1 : 1 + Math.sin(clock.elapsedTime * 3 + Number(node.id.slice(-2) || 1)) * 0.06;
     meshRef.current.scale.setScalar(scale * pulse);
   });
 

@@ -6,6 +6,15 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+/* prefers-reduced-motion is honoured throughout, not selectively (UI_UX.md §8,
+   spec §57). useCustomCursor and useTiltCard already checked; the six scroll
+   and entrance animations below did not, so a visitor who had asked the OS for
+   less motion still got parallax, staggered reveals, word-by-word headline
+   builds, floating orbs and springy buttons. */
+function prefersReducedMotion(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+}
+
 export function useHeroAnimation(
   headlineRef: React.RefObject<HTMLElement | null>,
   subtextRef: React.RefObject<HTMLElement | null>,
@@ -13,6 +22,7 @@ export function useHeroAnimation(
 ) {
   useEffect(() => {
     if (typeof window === 'undefined' || !headlineRef.current || !subtextRef.current || !ctaRef.current) return;
+    if (prefersReducedMotion()) return;
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
@@ -41,7 +51,7 @@ export function useHeroAnimation(
 
 export function useParallax(selector: string, amount = 0.15) {
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || prefersReducedMotion()) return;
 
     const ctx = gsap.context(() => {
       gsap.utils.toArray<HTMLElement>(selector).forEach((el) => {
@@ -63,7 +73,7 @@ export function useParallax(selector: string, amount = 0.15) {
 
 export function useScrollStagger(selector: string, stagger = 0.1) {
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || prefersReducedMotion()) return;
 
     const ctx = gsap.context(() => {
       ScrollTrigger.batch(selector, {
@@ -105,7 +115,7 @@ export function useScrollStagger(selector: string, stagger = 0.1) {
 
 export function useSplitText(selector: string, stagger = 0.06) {
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || prefersReducedMotion()) return;
 
     const ctx = gsap.context(() => {
       const items = gsap.utils.toArray<HTMLElement>(selector);
@@ -140,7 +150,7 @@ export function useSplitText(selector: string, stagger = 0.06) {
 
 export function useButtonHover(selector: string) {
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || prefersReducedMotion()) return;
 
     const ctx = gsap.context(() => {
       const cleanupFns: Array<() => void> = [];
@@ -176,7 +186,7 @@ export function useButtonHover(selector: string) {
 
 export function useOrbFloat(selector: string) {
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || prefersReducedMotion()) return;
 
     const ctx = gsap.context(() => {
       gsap.utils.toArray<HTMLElement>(selector).forEach((el, i) => {
