@@ -116,6 +116,14 @@ export function PersonEdit() {
 
       {error && <Alert tone="danger">{error}</Alert>}
 
+      {/* This was a bare <Card> with a Button onClick, so pressing Enter in the
+          name field did nothing and the `required` attribute below took part in
+          no validation at all — on the screen that is the core loop of the
+          product (UI_UX.md §10). */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); void save(); }}
+        noValidate
+      >
       <Card>
         <Field label="Name" hint='Full name, e.g. "Abebe Abebe", "Sara", or "A. Tesfaye".'>
           {(id) => (
@@ -171,9 +179,10 @@ export function PersonEdit() {
           <span className="muted small" aria-live="polite">
             {previewName.trim() ? `Will appear as “${previewName}”` : ' '}
           </span>
-          <Button onClick={save} loading={busy}>{editing ? 'Save changes' : 'Add person'}</Button>
+          <Button type="submit" loading={busy}>{editing ? 'Save changes' : 'Add person'}</Button>
         </div>
       </Card>
+      </form>
     </div>
   );
 }

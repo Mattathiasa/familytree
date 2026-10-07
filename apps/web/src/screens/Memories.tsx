@@ -19,6 +19,7 @@ export function Memories() {
   const [lightboxMemory, setLightboxMemory] = useState<MemoryDto | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [deleting, setDeleting] = useState<MemoryDto | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
@@ -46,12 +47,20 @@ export function Memories() {
     });
   }, [memories, filterType, filterPerson]);
 
-  async function handleDelete(id: string) {
-    if (!window.confirm('Delete this memory?')) return;
-    await familyApi.deleteMemory(familyId!, id);
-    setMemories((prev) => (prev ?? []).filter((m) => m.id !== id));
-    if (lightboxMemory?.id === id) setLightboxMemory(null);
-    toast.push('Memory removed.', 'success');
+  /* window.confirm('Delete this memory?') named nothing and blocked the page.
+     A confirmation for a destructive action names the specific object and the
+     consequence (UI_UX.md §7), and the Modal primitive already traps focus
+     and restores it. */
+  async function handleDelete(memory: MemoryDto) {
+    setDeleting(null);
+    try {
+      await familyApi.deleteMemory(familyId!, memory.id);
+      setMemories((prev) => (prev ?? []).filter((m) => m.id !== memory.id));
+      if (lightboxMemory?.id === memory.id) setLightboxMemory(null);
+      toast.push(`“${memory.title}” removed.`, 'success');
+    } catch {
+      toast.push('We couldn\'t remove that. Try again.', 'danger');
+    }
   }
 
   return (
@@ -251,11 +260,11 @@ export function Memories() {
 
                   {/* Metadata Row */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', fontSize: '0.75rem', color: 'var(--color-text-faint)', paddingTop: '10px', borderTop: '1px solid var(--color-border)' }}>
-                    <span>📍 {item.location ?? 'Ethiopia'}</span>
+                    <span>{item.location ? `📍 ${item.location}` : 'Place not recorded'}</span>
                     {canWrite && (
                       <button
                         type="button"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setDeleting(item)}
                         style={{ border: 'none', background: 'transparent', color: 'var(--color-danger)', cursor: 'pointer', fontSize: '0.75rem', padding: '2px' }}
                       >
                         Remove
@@ -338,6 +347,19 @@ export function Memories() {
           toast.push('Memory added to vault.', 'success');
         }}
       />
+
+      <Modal open={deleting !== null} onClose={() => setDeleting(null)} title={`Remove “${deleting?.title ?? ''}”?`}>
+        <p className="muted">
+          This removes <strong>{deleting?.title}</strong> from the family vault, along with the people
+          tagged in it. The file itself is not recoverable from here.
+        </p>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <Button variant="ghost" onClick={() => setDeleting(null)}>Keep it</Button>
+          <Button variant="danger" onClick={() => deleting && void handleDelete(deleting)}>
+            Remove “{deleting?.title}”
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
