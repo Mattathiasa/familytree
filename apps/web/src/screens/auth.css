@@ -1315,3 +1315,9 @@
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
 }
+
+/* Landing's sample player sits inside the dark audio card, so it needs light
+   text and a lighter track than the default surface. */
+.audio-landing-player { margin: var(--space-4) 0; }
+.audio-landing-player .ft-audio-meta { color: rgba(255, 255, 255, 0.72); }
+.audio-landing-player .ft-audio-wave span { background: rgba(255, 255, 255, 0.22); }

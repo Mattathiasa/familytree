@@ -1,6 +1,7 @@
 import { useRef, lazy, Suspense, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../app/store';
+import { AudioPlayer } from '@ft/ui';
 import {
   useHeroAnimation,
   useSplitText,
@@ -407,45 +408,27 @@ export function Landing() {
             <div className="audio-player-top">
               <div className="speaker-avatar">👵🏾</div>
               <div className="audio-meta">
-                <span className="audio-badge">ORAL HISTORY MEMORY #14</span>
+                <span className="audio-badge">SAMPLE RECORDING</span>
                 <h3 className="audio-title-text">
-                  Taytu Betul: "Recounting the harvest and wedding feast of 1964"
+                  How an oral history sounds in the archive
                 </h3>
-                <span className="audio-sub">Recorded in Harar · Amharic with English transcription</span>
+                <span className="audio-sub">
+                  A sample clip, so you can hear the player before you sign up. Your own recordings are private by default.
+                </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                className={`audio-play-btn ${isPlayingAudio ? 'is-playing' : ''}`}
-                aria-label={isPlayingAudio ? 'Pause oral recording' : 'Play oral recording'}
-              >
-                {isPlayingAudio ? '⏸' : '▶'}
-              </button>
             </div>
 
-            {/* Sound Waveform Visualization */}
-            <div className="audio-waveform-container" aria-hidden="true">
-              {Array.from({ length: 36 }).map((_, i) => {
-                const height = Math.sin(i * 0.4) * 24 + 32;
-                return (
-                  <div
-                    key={i}
-                    className={`waveform-bar ${isPlayingAudio ? 'is-animating' : ''}`}
-                    style={{
-                      height: `${height}px`,
-                      animationDelay: `${(i % 8) * 0.12}s`,
-                    }}
-                  />
-                );
-              })}
-            </div>
+            <AudioPlayer
+              src="https://cdn.freesound.org/previews/512/512689_11200236-lq.mp3"
+              label="sample oral history recording"
+              className="audio-landing-player"
+            />
 
             <div className="audio-player-bottom">
-              <span className="audio-time">02:44 / 08:15</span>
               <span className="audio-snippet" lang="am">
                 «የዛሬው ቀን እንዲህ በቀላሉ አልመጣም፤ ልጆቻችን ማወቅ አለባቸው...»
               </span>
-              <span className="audio-format-badge">Lossless FLAC & WebM</span>
+              <span className="audio-format-badge">Your original upload is kept, always</span>
             </div>
           </div>
         </section>
@@ -482,9 +465,10 @@ export function Landing() {
 
             <div className="engine-card glass-panel tilt-card">
               <div className="engine-icon">🛡️</div>
-              <h3>Living Relatives Privacy Veil</h3>
+              <h3>Visibility On Every Record</h3>
               <p>
-                Living family members' personal details remain automatically shielded from public viewers until explicit consent is granted.
+                Every person, story and photo carries its own visibility — private, family, chosen members, or public —
+                and every read is checked against it. Nothing is public because you forgot to make it private.
               </p>
             </div>
 

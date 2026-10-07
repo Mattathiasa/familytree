@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { family as familyApi, personLabel } from '../api/client';
 import type { MemoryDto, PersonDto } from '../api/types';
 import { useApp } from '../app/store';
-import { Badge, Button, Card, EmptyState, Field, Input, Modal, Select, Skeleton, Textarea, useToast } from '@ft/ui';
+import { AudioPlayer, Badge, Button, Card, EmptyState, Field, Input, Modal, Select, Skeleton, Textarea, useToast } from '@ft/ui';
 
 export function Memories() {
   const { familyId } = useParams();
@@ -17,7 +17,6 @@ export function Memories() {
   const [filterType, setFilterType] = useState<'all' | 'photo' | 'audio' | 'document'>('all');
   const [filterPerson, setFilterPerson] = useState<string>('all');
   const [lightboxMemory, setLightboxMemory] = useState<MemoryDto | null>(null);
-  const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
 
   useEffect(() => {
@@ -139,7 +138,6 @@ export function Memories() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
           {filtered.map((item) => {
             const tagged = people.filter((p) => item.personIds.includes(p.id));
-            const isPlaying = activeAudioId === item.id;
 
             return (
               <Card
@@ -213,61 +211,25 @@ export function Memories() {
                     )}
                   </div>
                 ) : (
-                  /* Audio Player Card Section */
+                  /* Audio Player Card Section — a real <audio>, via the
+                     AudioPlayer primitive. The recording is the source of
+                     truth (spec §30). */
                   <div
                     style={{
                       padding: '24px 20px',
                       background: 'linear-gradient(135deg, var(--color-brand-light) 0%, var(--color-gold-soft) 100%)',
                       borderBottom: '1px solid var(--color-border)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '16px',
                     }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => setActiveAudioId(isPlaying ? null : item.id)}
-                      style={{
-                        width: '52px',
-                        height: '52px',
-                        borderRadius: '50%',
-                        border: 'none',
-                        background: 'linear-gradient(135deg, var(--color-brand), var(--color-gold))',
-                        color: '#fff',
-                        fontSize: '1.25rem',
-                        display: 'grid',
-                        placeItems: 'center',
-                        cursor: 'pointer',
-                        flex: 'none',
-                        boxShadow: '0 4px 14px rgba(198, 83, 34, 0.35)',
-                      }}
-                      aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
-                    >
-                      {isPlaying ? '⏸' : '▶'}
-                    </button>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--color-brand)', letterSpacing: '0.08em' }}>
-                        🎙️ ORAL RECORDING
-                      </span>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)' }}>
-                        {item.audioDuration ? `${item.audioDuration} mins` : 'Spoken Audio'}
-                      </div>
-                      {/* Animated Soundwave */}
-                      <div style={{ display: 'flex', gap: '3px', alignItems: 'center', height: '16px', marginTop: '6px' }}>
-                        {Array.from({ length: 18 }).map((_, idx) => (
-                          <div
-                            key={idx}
-                            style={{
-                              width: '3px',
-                              height: isPlaying ? `${Math.sin(idx * 0.8) * 10 + 12}px` : '4px',
-                              background: 'var(--color-brand)',
-                              borderRadius: '2px',
-                              transition: 'height 0.2s ease',
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--color-brand)', letterSpacing: '0.08em' }}>
+                      🎙️ ORAL RECORDING
+                    </span>
+                    <AudioPlayer
+                      src={item.url}
+                      label={item.title}
+                      fallbackDuration={item.audioDuration}
+                      className="ft-audio--memory"
+                    />
                   </div>
                 )}
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { canDeletePerson, canEditPerson, family as familyApi, personLabel } from '../api/client';
 import type { ChangeRecordDto, MemoryDto, PersonDto, RelativeGroups, StoryDto } from '../api/types';
-import { Avatar, Badge, Button, Card, Modal, Skeleton, useToast } from '@ft/ui';
+import { AudioPlayer, Avatar, Badge, Button, Card, Modal, Skeleton, useToast } from '@ft/ui';
 import { convertYear, formatFamilyDate, lifespan, resolveLiving } from '@ft/domain';
 import { useApp } from '../app/store';
 
@@ -59,10 +59,6 @@ export function PersonProfile() {
   const [notFound, setNotFound] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // Audio player state for oral histories
-  const [activeAudio, setActiveAudio] = useState<string | null>(null);
-  const [audioPlaying, setAudioPlaying] = useState(false);
-
   useEffect(() => {
     let alive = true;
     Promise.all([
@@ -89,16 +85,6 @@ export function PersonProfile() {
     await people.remove(familyId!, personId!);
     toast.push('Person removed.', 'success');
     nav(`/f/${familyId}/people`);
-  }
-
-  function toggleAudio(url?: string) {
-    if (!url) return;
-    if (activeAudio === url && audioPlaying) {
-      setAudioPlaying(false);
-    } else {
-      setActiveAudio(url);
-      setAudioPlaying(true);
-    }
   }
 
   if (notFound) {
@@ -391,26 +377,7 @@ export function PersonProfile() {
 
                   {m.type === 'audio' && (
                     <div className="story-audio-banner" style={{ marginTop: 'auto' }}>
-                      <button
-                        type="button"
-                        className="ft-icon-btn"
-                        style={{ background: 'var(--color-accent)', color: '#fff', width: 34, height: 34, minWidth: 34, minHeight: 34 }}
-                        onClick={() => toggleAudio(m.url)}
-                        aria-label={audioPlaying && activeAudio === m.url ? 'Pause audio' : 'Play oral history'}
-                      >
-                        {audioPlaying && activeAudio === m.url ? '⏸' : '▶'}
-                      </button>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600 }}>{m.description.slice(0, 40) || name}</div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>{m.audioDuration ?? '1:24'} · Recorded Oral History</div>
-                      </div>
-                      {audioPlaying && activeAudio === m.url && (
-                        <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                          <span style={{ width: 3, height: 14, background: 'var(--color-accent)', animation: 'pulse 0.8s infinite' }} />
-                          <span style={{ width: 3, height: 20, background: 'var(--color-accent)', animation: 'pulse 1s infinite' }} />
-                          <span style={{ width: 3, height: 12, background: 'var(--color-accent)', animation: 'pulse 0.6s infinite' }} />
-                        </div>
-                      )}
+                      <AudioPlayer src={m.url} label={m.title} fallbackDuration={m.audioDuration} />
                     </div>
                   )}
 

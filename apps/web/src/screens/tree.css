@@ -947,3 +947,6 @@
 .node-status-indicator.is-unknown {
   color: var(--color-text-faint);
 }
+
+/* The memory card's player sits under its own eyebrow label. */
+.ft-audio--memory { margin-top: var(--space-2); }
