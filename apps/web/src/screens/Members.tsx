@@ -6,6 +6,12 @@ import { useApp } from '../app/store';
 import { Avatar, Badge, Button, Card, Field, Input, Modal, Select, Skeleton, useToast } from '@ft/ui';
 import { type Role } from '@ft/domain';
 
+/* Invitations store the path; the shareable link needs the origin, which only
+   the browser knows. */
+function shareLink(inviteUrl: string): string {
+  return inviteUrl.startsWith('http') ? inviteUrl : `${window.location.origin}${inviteUrl}`;
+}
+
 export function Members() {
   const { familyId } = useParams();
   const { user, roleFor } = useApp();
@@ -142,7 +148,7 @@ export function Members() {
                   <span className="muted small">expires {new Date(i.expiresAt).toLocaleDateString()}</span>
                 </span>
                 <span style={{ display: 'flex', gap: 6 }}>
-                  <Button size="sm" variant="secondary" onClick={() => { navigator.clipboard?.writeText(i.inviteUrl); toast.push('Invite link copied.'); }}>
+                  <Button size="sm" variant="secondary" onClick={() => { navigator.clipboard?.writeText(shareLink(i.inviteUrl)); toast.push('Invite link copied.'); }}>
                     Copy link
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => revoke(i)}>Revoke</Button>
@@ -184,10 +190,10 @@ function InviteModal({ familyId, open, onClose }: { familyId: string; open: bool
             Invite created{lastInvite.email ? ` for ${lastInvite.email}` : ''}. They'll get access after accepting.
           </p>
           <Field label="Invite link" hint="Share this with anyone — accepting is what grants access.">
-            {(id) => <Input id={id} readOnly value={lastInvite.inviteUrl} onFocus={(e) => e.target.select()} />}
+            {(id) => <Input id={id} readOnly value={shareLink(lastInvite.inviteUrl)} onFocus={(e) => e.target.select()} />}
           </Field>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <Button variant="secondary" onClick={() => { navigator.clipboard?.writeText(lastInvite.inviteUrl); toast.push('Link copied.'); }}>Copy link</Button>
+            <Button variant="secondary" onClick={() => { navigator.clipboard?.writeText(shareLink(lastInvite.inviteUrl)); toast.push('Link copied.'); }}>Copy link</Button>
             <Button onClick={onClose}>Done</Button>
           </div>
         </>

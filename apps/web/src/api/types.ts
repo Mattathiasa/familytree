@@ -151,9 +151,21 @@ export interface InvitationDto {
   email: string;
   role: Role;
   status: 'pending' | 'accepted' | 'revoked' | 'rejected';
+  /* The bearer credential in the link. Stored separately from inviteUrl so the
+     lookup and the shareable URL cannot drift apart (SECURITY.md §12: invite
+     links are bearer tokens — short expiry, single use, revocable). */
+  token: string;
   inviteUrl: string;
   createdAt: string;
   expiresAt: string;
+}
+
+/** What `GET /invitations/:token` shows before you sign in (API.md §3). */
+export interface InvitationPreviewDto {
+  familyName: string;
+  role: Role;
+  status: InvitationDto['status'];
+  expired: boolean;
 }
 
 export interface TreeResponseDto {

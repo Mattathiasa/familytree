@@ -161,7 +161,7 @@ export function seedDb(): MockDb {
   ];
 
   const invitations: InvitationDto[] = [
-    { id: 'inv-1', familyId: fam.id, email: 'nahom@example.com', role: 'contributor', status: 'pending', inviteUrl: 'https://familytree.app/invite/9f3k…', createdAt: '2026-09-25T00:00:00Z', expiresAt: '2026-10-25T00:00:00Z' },
+    { id: 'inv-1', familyId: fam.id, email: 'nahom@example.com', role: 'contributor', status: 'pending', token: 'demo9f3ktoken001', inviteUrl: '/invite/demo9f3ktoken001', createdAt: '2026-09-25T00:00:00Z', expiresAt: '2026-10-25T00:00:00Z' },
   ];
 
   const memories: MemoryDto[] = [

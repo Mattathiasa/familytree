@@ -8,7 +8,7 @@ import {
 import { emptyDb, seedDb, uid, type MockDb } from './mock-db';
 import type {
   ActivityItemDto, ChangeRecordDto, FamilyLineage, FamilyStatsDto, InvitationDto, MemberDto,
-  MemoryDto, PersonDto, RelationshipDto, RelativeGroups, SessionUser, StoryDto,
+  InvitationPreviewDto, MemoryDto, PersonDto, RelationshipDto, RelativeGroups, SessionUser, StoryDto,
   TreeResponseDto, UpcomingItemDto,
 } from './types';
 
@@ -558,9 +558,11 @@ export const family = {
   async invite(familyId: string, input: { email?: string; role: Role }): Promise<InvitationDto> {
     await delay(200);
     requireMembership(familyId);
+    const token = uid().replace(/-/g, '').slice(0, 16);
     const inv: InvitationDto = {
       id: uid(), familyId, email: input.email ?? '', role: input.role, status: 'pending',
-      inviteUrl: `https://familytree.app/invite/${uid().slice(0, 8)}…`,
+      token,
+      inviteUrl: `/invite/${token}`,
       createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 30 * 864e5).toISOString(),
     };
     mutate((d) => { d.invitations.unshift(inv); });
@@ -579,11 +581,33 @@ export const family = {
     });
   },
 
-  async acceptInvitation(invitationId: string): Promise<void> {
+  /* Unauthenticated: the token is the credential, and you are shown what you
+     are being offered before being asked to sign in (API.md §3). */
+  async invitationPreview(token: string): Promise<InvitationPreviewDto> {
+    await delay(150);
+    const inv = db.invitations.find((i) => i.token === token);
+    if (!inv) throw new ApiRequestError('NOT_FOUND', 'This invitation link is not valid.');
+    return {
+      familyName: db.families.find((f) => f.id === inv.familyId)?.name ?? 'a family',
+      role: inv.role,
+      status: inv.status,
+      expired: Date.parse(inv.expiresAt) < Date.now(),
+    };
+  },
+
+  async acceptInvitation(token: string): Promise<void> {
     await delay(200);
     const user = requireUser();
+    const found = db.invitations.find((i) => i.token === token);
+    if (!found) throw new ApiRequestError('NOT_FOUND', 'This invitation link is not valid.');
+    if (found.status === 'revoked' || found.status === 'rejected') {
+      throw new ApiRequestError('FORBIDDEN', 'This invitation is no longer open.');
+    }
+    if (Date.parse(found.expiresAt) < Date.now()) {
+      throw new ApiRequestError('FORBIDDEN', 'This invitation has expired. Ask for a new one.');
+    }
     mutate((d) => {
-      const inv = d.invitations.find((i) => i.id === invitationId);
+      const inv = d.invitations.find((i) => i.token === token);
       if (inv && inv.status === 'pending') {
         inv.status = 'accepted';
         d.members.push({
