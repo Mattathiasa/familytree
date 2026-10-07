@@ -146,6 +146,23 @@ export interface PersonPatch {
   visibility?: PersonDto['visibility'];
 }
 
+/* "Every field optional except a name" (FR-20) is the product's core rule, so
+   it has to be checked against the name parts themselves. The previous check
+   asked whether displayName() returned something — and it always does, because
+   its last resort is the literal string 'Unnamed'. A person with every name
+   field blank was accepted and then displayed as "Unnamed" forever. */
+function requireAName(input: Pick<PersonPatch, 'givenName' | 'middleName' | 'familyName' | 'nickname'>): void {
+  const anyName = [input.givenName, input.middleName, input.familyName, input.nickname]
+    .some((part) => (part ?? '').trim().length > 0);
+  if (!anyName) {
+    throw new ApiRequestError(
+      'VALIDATION_FAILED',
+      'Some of the details you entered need attention.',
+      { givenName: 'A name is required — everything else is optional.' },
+    );
+  }
+}
+
 export const people = {
   async list(familyId: string): Promise<PersonDto[]> {
     await delay();
@@ -161,11 +178,17 @@ export const people = {
     return p;
   },
 
-  async create(familyId: string, input: PersonPatch & { id?: string }): Promise<PersonDto> {
+  async create(familyId: string, input: PersonPatch & { id?: string; claimedByMe?: boolean }): Promise<PersonDto> {
     await delay(200);
     const user = requireUser();
-    if (!displayName({ givenName: input.givenName ?? '', familyName: input.familyName ?? '', nickname: input.nickname ?? '' }).trim()) {
-      throw new ApiRequestError('VALIDATION_FAILED', 'Some of the details you entered need attention.', { givenName: 'A name is required — everything else is optional.' });
+    requireAName(input);
+    if (input.claimedByMe) {
+      /* One account claims at most one person per family, or "me" stops being
+         a single answer and every kinship label becomes ambiguous. */
+      const existing = db.people.find((p) => p.familyId === familyId && p.userId === user.id);
+      if (existing) {
+        throw new ApiRequestError('CONFLICT', `You've already claimed ${displayName(existing)} in this family.`);
+      }
     }
     const now = new Date().toISOString();
     const person: PersonDto = {
@@ -185,6 +208,8 @@ export const people = {
       deathPlace: input.deathPlace ?? '',
       photoUrl: null,
       visibility: input.visibility ?? 'family',
+      // Onboarding adds you to your own family; that record is yours (spec §23).
+      userId: input.claimedByMe ? user.id : null,
       version: 1,
       createdBy: user.id,
       createdAt: now,
@@ -209,6 +234,15 @@ export const people = {
     if (current.version !== version) {
       throw new ApiRequestError('CONFLICT', 'Someone else updated this person while you were editing.');
     }
+    /* An edit must not be able to blank out the one required field either.
+       Validate the name the person would end up with, not just what was sent. */
+    requireAName({
+      givenName: patch.givenName ?? current.givenName,
+      middleName: patch.middleName ?? current.middleName,
+      familyName: patch.familyName ?? current.familyName,
+      nickname: patch.nickname ?? current.nickname,
+    });
+
     const changes: ChangeRecordDto[] = [];
     const record = (field: string, label: string, oldV: string, newV: string) => {
       if (oldV !== newV) changes.push({ id: uid(), personId, field, label, oldValue: oldV, newValue: newV, actorName: user.displayName, at: new Date().toISOString() });

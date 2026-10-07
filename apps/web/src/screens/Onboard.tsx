@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth, family as familyApi, familyDbCreate } from '../api/client';
+import { auth, family as familyApi, familyDbCreate, people as peopleApi } from '../api/client';
 import { useApp } from '../app/store';
 import { Alert, Button, Field, Input, Select, Textarea, useToast } from '@ft/ui';
 import './auth.css';
@@ -41,11 +41,23 @@ export function Onboard() {
     setError(null);
     try {
       const id = `fam-${Date.now().toString(36)}`;
-      familyDbCreate(familyName.trim(), '', id);
+      familyDbCreate(familyName.trim(), '', id, lineageType);
 
       if (yourName && yourName !== user?.displayName) {
         await auth.updateProfile({ displayName: yourName });
       }
+
+      /* Step 2 asks for your name and says it is how your family will see you,
+         but nothing here ever added you to the family — so onboarding finished
+         on a dashboard and a tree with nobody in them. Journey A expects the
+         opposite: you are the first person in your own archive, with only a
+         name required (FR-20). */
+      const [givenName, ...restOfName] = yourName.trim().split(/\s+/);
+      await peopleApi.create(id, {
+        givenName: givenName ?? yourName.trim(),
+        familyName: restOfName.join(' '),
+        claimedByMe: true,
+      });
 
       if (inviteEmail.trim()) {
         await familyApi.invite(id, { email: inviteEmail.trim(), role: 'contributor' });
