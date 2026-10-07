@@ -25,16 +25,17 @@ import { NotFound } from '../screens/NotFound';
 import { ResetPassword } from '../screens/ResetPassword';
 import { canManage } from '@ft/domain';
 import '../screens/tree.css';
+import { readStored, writeStored } from './storage';
 
 function ThemeToggle() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const stored = localStorage.getItem('ft.theme');
+    const stored = readStored('ft.theme');
     if (stored === 'light' || stored === 'dark') return stored;
     return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    localStorage.setItem('ft.theme', theme);
+    writeStored('ft.theme', theme);
   }, [theme]);
   return (
     <button

@@ -6,6 +6,7 @@ import { useApp } from '../app/store';
 import { Avatar, Badge, Button, Card, Field, Input, Select, useToast } from '@ft/ui';
 import type { NotificationPrefs, SessionUser } from '../api/types';
 import { DEFAULT_NOTIFICATION_PREFS } from '../api/types';
+import { readStored } from '../app/storage';
 
 export function Account() {
   const { user, familyId, families, refresh } = useApp();
@@ -51,7 +52,7 @@ export function Account() {
   }
 
   function downloadJson() {
-    const raw = localStorage.getItem('ft.mock.db.v1');
+    const raw = readStored('ft.mock.db.v1');
     const blob = new Blob([raw ?? '{}'], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

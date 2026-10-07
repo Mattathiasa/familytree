@@ -24,6 +24,9 @@ export default defineConfig({
         test: {
           name: 'dom',
           environment: 'jsdom',
+          // An http origin, so localStorage exists — the app persists the
+          // theme and the mock database there.
+          environmentOptions: { jsdom: { url: 'http://localhost:5173/' } },
           setupFiles: ['./vitest.setup.ts'],
           include: [
             'packages/*/src/**/*.test.tsx',

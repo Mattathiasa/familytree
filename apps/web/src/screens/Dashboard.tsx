@@ -6,6 +6,7 @@ import { useApp } from '../app/store';
 import { ETHIOPIC_MONTH_NAMES_AM, ethiopicEvangelistYear, gregorianToEthiopic } from '@ft/domain';
 import { Card, LoadError, Skeleton, useReveal } from '@ft/ui';
 import { useButtonHover, useSplitText, useTiltCard } from '../hooks/useScrollAnimation';
+import { readStored, writeStored } from '../app/storage';
 
 function timeAgo(iso: string): string {
   const s = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -241,7 +242,7 @@ export function Dashboard() {
 }
 
 function OnboardingChecklist({ familyId }: { familyId: string | undefined }) {
-  const [dismissed, setDismissed] = useState(() => localStorage.getItem('ft.onboarding.done') === '1');
+  const [dismissed, setDismissed] = useState(() => readStored('ft.onboarding.done') === '1');
   const [peopleCount, setPeopleCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -265,7 +266,7 @@ function OnboardingChecklist({ familyId }: { familyId: string | undefined }) {
           className="ft-btn ft-btn--ghost"
           style={{ fontSize: '0.75rem', padding: '4px 8px' }}
           onClick={() => {
-            localStorage.setItem('ft.onboarding.done', '1');
+            writeStored('ft.onboarding.done', '1');
             setDismissed(true);
           }}
         >

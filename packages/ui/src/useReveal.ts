@@ -11,7 +11,14 @@ export function useReveal(ref: RefObject<HTMLElement | null>, deps: unknown[] = 
     const el = ref.current;
     if (!el) return;
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    /* Reduced motion, or no IntersectionObserver to observe with: show the
+       content immediately rather than animating it in — or, worse, throwing and
+       taking the screen down. Content that cannot animate must still be
+       content (FR-48, and UI_UX.md §7's "empty is a state, blank is a bug"). */
+    if (
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      || typeof IntersectionObserver === 'undefined'
+    ) {
       el.classList.add('is-visible');
       return;
     }

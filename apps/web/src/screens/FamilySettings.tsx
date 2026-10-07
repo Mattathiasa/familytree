@@ -4,6 +4,7 @@ import { useApp } from '../app/store';
 import { resetDemoData, updateFamilyInDb, familyDbSetCalendar, familyDbSetPhoto, familyDbSetPrivacy, family as familyApi } from '../api/client';
 import { generateGedcom } from '../api/gedcom';
 import { Alert, Button, Card, Field, Input, Modal, Select, Textarea, useToast } from '@ft/ui';
+import { readStored } from '../app/storage';
 
 export function FamilySettings() {
   const { familyId } = useParams();
@@ -68,7 +69,7 @@ export function FamilySettings() {
   }
 
   function downloadJson() {
-    const raw = localStorage.getItem('ft.mock.db.v1');
+    const raw = readStored('ft.mock.db.v1');
     const blob = new Blob([raw ?? '{}'], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

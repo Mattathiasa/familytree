@@ -6,6 +6,7 @@ import {
   type FamilyDate, type GraphEdge, type Role,
 } from '@ft/domain';
 import { seedDb, uid, type MockDb } from './mock-db';
+import { readStored, writeStored } from '../app/storage';
 import type {
   ActivityItemDto, ChangeRecordDto, FamilyLineage, FamilyStatsDto, InvitationDto, MemberDto,
   ApiErrorCode, InvitationPreviewDto, MemoryDto, NotificationPrefs, PersonDto, RelationshipDto, RelativeGroups, SessionUser, StoryDto,
@@ -17,14 +18,14 @@ const KEY = 'ft.mock.db.v1';
 
 function load(): MockDb {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = readStored(KEY);
     if (raw) return JSON.parse(raw) as MockDb;
   } catch { /* corrupted store → reseed */ }
   return seedDb();
 }
 
 function save(db: MockDb): void {
-  try { localStorage.setItem(KEY, JSON.stringify(db)); } catch { /* private mode */ }
+  writeStored(KEY, JSON.stringify(db));
 }
 
 let db: MockDb = load();
