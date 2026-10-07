@@ -193,12 +193,17 @@ export interface TreeResponseDto {
 
 export type FamilyLineage = 'ethiopian' | 'general';
 
+/* The error contract from API.md §1.2. This union existed and was referenced
+   nowhere: ApiRequestError took a loose `code: string`, so a typo in a thrown
+   code or a `catch` comparing against one was never caught by the compiler. */
+export type ApiErrorCode =
+  | 'VALIDATION_FAILED' | 'UNAUTHENTICATED' | 'EMAIL_UNVERIFIED' | 'FORBIDDEN'
+  | 'NOT_FOUND' | 'CONFLICT' | 'RATE_LIMITED' | 'PAYLOAD_TOO_LARGE'
+  | 'UNSUPPORTED_MEDIA' | 'INTERNAL';
+
 export interface ApiError {
   error: {
-    code:
-      | 'VALIDATION_FAILED' | 'UNAUTHENTICATED' | 'EMAIL_UNVERIFIED' | 'FORBIDDEN'
-      | 'NOT_FOUND' | 'CONFLICT' | 'RATE_LIMITED' | 'PAYLOAD_TOO_LARGE'
-      | 'UNSUPPORTED_MEDIA' | 'INTERNAL';
+    code: ApiErrorCode;
     message: string;
     fields?: Record<string, string>;
   };

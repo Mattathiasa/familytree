@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { family as familyApi, people as peopleApi } from '../api/client';
+import { people as peopleApi } from '../api/client';
 import type { PersonDto } from '../api/types';
 import { Alert, Button, Card, Field, Input, Select, Textarea, useToast } from '@ft/ui';
 import { DateField } from '@ft/ui';

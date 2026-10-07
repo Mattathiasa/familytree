@@ -74,7 +74,6 @@ export function Landing() {
   const ctaRef = useRef<HTMLAnchorElement>(null);
   const [selectedDemoId, setSelectedDemoId] = useState<string>('5');
   const [activeCalTab, setActiveCalTab] = useState<number>(0);
-  const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
 
   useHeroAnimation(headlineRef, subtextRef, ctaRef);
   useSplitText('#how-title', 0.04);

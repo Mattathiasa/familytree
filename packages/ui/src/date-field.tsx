@@ -1,7 +1,6 @@
 /* DateField — precision selector beside every date (UI_UX.md §3.4).
    Selecting "Unknown" is a respected, first-class answer that stores precision='unknown'. */
 
-import { useId } from 'react';
 import type { DatePrecision, FamilyDate } from '@ft/domain';
 import { Input, Select } from './components';
 
@@ -16,7 +15,6 @@ export function DateField({
   onChange: (d: FamilyDate | null) => void;
   allowRange?: boolean;
 }) {
-  const id = useId();
   const cal = value?.calendar ?? 'gregorian';
   const precision: DatePrecision = value?.precision ?? 'unknown';
 

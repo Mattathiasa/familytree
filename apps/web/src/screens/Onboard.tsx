@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, family as familyApi, familyDbCreate, people as peopleApi } from '../api/client';
 import { useApp } from '../app/store';
-import { Alert, Button, Field, Input, Select, Textarea, useToast } from '@ft/ui';
+import { Alert, Button, Field, Input, Select, useToast } from '@ft/ui';
 import './auth.css';
 
 const AuthCanvas = lazy(() => import('./AuthScene3D').then((m) => ({ default: m.AuthCanvas })));
@@ -18,7 +18,7 @@ export function Onboard() {
   const [familyName, setFamilyName] = useState('');
   const [lineageType, setLineageType] = useState<LineageType>('ethiopian');
   const [yourName, setYourName] = useState(user?.displayName ?? '');
-  const [yourEmail, setYourEmail] = useState(user?.email ?? '');
+  const [yourEmail] = useState(user?.email ?? '');
   const [inviteEmail, setInviteEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

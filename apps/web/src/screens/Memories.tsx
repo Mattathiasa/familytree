@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { family as familyApi, personLabel } from '../api/client';
 import type { MemoryDto, PersonDto } from '../api/types';
 import { useApp } from '../app/store';
-import { activatable, AudioPlayer, Badge, Button, Card, EmptyState, Field, Input, LoadError, Modal, Select, Skeleton, Textarea, useToast } from '@ft/ui';
+import { activatable, AudioPlayer, Button, Card, EmptyState, Field, Input, LoadError, Modal, Select, Skeleton, Textarea, useToast } from '@ft/ui';
 
 export function Memories() {
   const { familyId } = useParams();

@@ -196,7 +196,7 @@ function NodeOrb({ node, onHover }: { node: AncestorNode; onHover: (n: AncestorN
 }
 
 // Master Living Tree Scene with GSAP Scroll Interaction & Mouse Physics
-function LivingTreeScene({ activeNode, setActiveNode }: { activeNode: AncestorNode | null; setActiveNode: (n: AncestorNode | null) => void }) {
+function LivingTreeScene({ setActiveNode }: { setActiveNode: (n: AncestorNode | null) => void }) {
   const treeGroupRef = useRef<THREE.Group>(null!);
   const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
 
@@ -296,7 +296,7 @@ function LightingAndAtmosphere() {
 }
 
 export function LandingCanvas() {
-  const [activeNode, setActiveNode] = useState<AncestorNode | null>(null);
+  const [, setActiveNode] = useState<AncestorNode | null>(null);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -307,7 +307,7 @@ export function LandingCanvas() {
         dpr={[1, 2]}
       >
         <LightingAndAtmosphere />
-        <LivingTreeScene activeNode={activeNode} setActiveNode={setActiveNode} />
+        <LivingTreeScene setActiveNode={setActiveNode} />
       </Canvas>
 
       {/* Subtle bottom gradient mask for seamless blend */}

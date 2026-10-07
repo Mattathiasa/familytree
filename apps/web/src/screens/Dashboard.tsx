@@ -4,7 +4,7 @@ import { family as familyApi, livingTally } from '../api/client';
 import type { ActivityItemDto, FamilyStatsDto, PersonDto } from '../api/types';
 import { useApp } from '../app/store';
 import { ETHIOPIC_MONTH_NAMES_AM, ethiopicEvangelistYear, gregorianToEthiopic } from '@ft/domain';
-import { Button, Card, EmptyState, LoadError, Skeleton, useReveal } from '@ft/ui';
+import { Card, LoadError, Skeleton, useReveal } from '@ft/ui';
 import { useButtonHover, useSplitText, useTiltCard } from '../hooks/useScrollAnimation';
 
 function timeAgo(iso: string): string {

@@ -5,10 +5,10 @@ import {
   can, createsCycle, displayName, resolveLiving, roleAtLeast,
   type FamilyDate, type GraphEdge, type Role,
 } from '@ft/domain';
-import { emptyDb, seedDb, uid, type MockDb } from './mock-db';
+import { seedDb, uid, type MockDb } from './mock-db';
 import type {
   ActivityItemDto, ChangeRecordDto, FamilyLineage, FamilyStatsDto, InvitationDto, MemberDto,
-  InvitationPreviewDto, MemoryDto, NotificationPrefs, PersonDto, RelationshipDto, RelativeGroups, SessionUser, StoryDto,
+  ApiErrorCode, InvitationPreviewDto, MemoryDto, NotificationPrefs, PersonDto, RelationshipDto, RelativeGroups, SessionUser, StoryDto,
   TreeResponseDto, UpcomingItemDto,
 } from './types';
 import { DEFAULT_NOTIFICATION_PREFS } from './types';
@@ -50,7 +50,11 @@ export function resetDemoData(): void {
 const delay = (ms = 120) => new Promise<void>((r) => setTimeout(r, ms));
 
 export class ApiRequestError extends Error {
-  constructor(public code: string, message: string, public fields?: Record<string, string>) {
+  constructor(
+    public code: ApiErrorCode,
+    message: string,
+    public fields?: Record<string, string>,
+  ) {
     super(message);
   }
 }

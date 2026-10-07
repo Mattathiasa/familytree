@@ -240,11 +240,6 @@ export function TreeScreen() {
           selectedId={selectedId}
           onSelect={(id) => setSelectedId(id)}
           onOpen={(id) => nav(`/f/${familyId}/people/${id}`)}
-          onAdd={(person, rel) => {
-            if (!canWrite) { toast.push('Viewers can\'t add people. Ask a family admin for a contributor role.', 'danger'); return; }
-            setAddTarget({ person, rel });
-          }}
-          onFit={() => {}}
         />
       )}
 
@@ -294,7 +289,7 @@ export function TreeScreen() {
 /* ------------------------------------------------------------------ */
 
 function TreeCanvas({
-  layout, people, query, statusFilter, selectedId, onSelect, onOpen, onAdd,
+  layout, people, query, statusFilter, selectedId, onSelect, onOpen,
 }: {
   layout: LayoutResult;
   people: PersonDto[];
@@ -303,8 +298,6 @@ function TreeCanvas({
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onOpen: (id: string) => void;
-  onAdd: (person: PersonDto, rel: 'parent' | 'child' | 'spouse') => void;
-  onFit: () => void;
 }) {
   const reduced = usePrefersReducedMotion();
   const wrapRef = useRef<HTMLDivElement>(null);

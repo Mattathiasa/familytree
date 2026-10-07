@@ -14,8 +14,7 @@ function shareLink(inviteUrl: string): string {
 
 export function Members() {
   const { familyId } = useParams();
-  const { user, roleFor } = useApp();
-  const myRole = roleFor(familyId);
+  const { user } = useApp();
   const toast = useToast();
   const [members, setMembers] = useState<MemberDto[] | null>(null);
   const [invites, setInvites] = useState<InvitationDto[] | null>(null);

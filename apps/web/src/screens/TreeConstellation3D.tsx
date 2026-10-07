@@ -246,8 +246,6 @@ export function TreeConstellation3D({
     const map = new Map<string, ConstellationNode>();
     if (people.length === 0) return map;
 
-    // Determine generations roughly by relation depth or index
-    const count = people.length;
     people.forEach((p, idx) => {
       // Golden angle spiral distribution with vertical tiers
       const angle = idx * 2.39996; // Golden angle

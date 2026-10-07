@@ -60,7 +60,6 @@ export function useParallax(selector: string, amount = 0.15) {
           start: 'top bottom',
           end: 'bottom top',
           onUpdate: (self) => {
-            const y = self.progress * amount * window.innerHeight;
             gsap.set(el, { y: Math.sin(self.progress * Math.PI) * amount * 100 });
           },
         });

@@ -35,7 +35,7 @@ export function Stories() {
       if (alive) setLoadError(true);
     });
     return () => { alive = false; };
-  }, [familyId, editing]);
+  }, [familyId, editing, reloadToken]);
 
   const peopleMap = useMemo(() => {
     const map = new Map<string, PersonDto>();
