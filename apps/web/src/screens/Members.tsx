@@ -4,7 +4,7 @@ import { family as familyApi } from '../api/client';
 import type { InvitationDto, MemberDto } from '../api/types';
 import { useApp } from '../app/store';
 import { Avatar, Badge, Button, Card, Field, Input, Modal, Select, Skeleton, useToast } from '@ft/ui';
-import { canManage, type Role } from '@ft/domain';
+import { type Role } from '@ft/domain';
 
 export function Members() {
   const { familyId } = useParams();
@@ -14,8 +14,6 @@ export function Members() {
   const [members, setMembers] = useState<MemberDto[] | null>(null);
   const [invites, setInvites] = useState<InvitationDto[] | null>(null);
   const [inviting, setInviting] = useState(false);
-
-  const isAdmin = canManage(myRole);
 
   useEffect(() => {
     let alive = true;
@@ -27,14 +25,8 @@ export function Members() {
     return () => { alive = false; };
   }, [familyId]);
 
-  if (!isAdmin) {
-    return (
-      <Card>
-        <h1>Members</h1>
-        <p className="muted">Only family owners and admins manage members.</p>
-      </Card>
-    );
-  }
+  // Role refusal lives in the <RequireRole min="admin"> route guard (app/guards.tsx),
+  // which also stops a Viewer's client from ever fetching the member list.
 
   async function changeRole(userId: string, role: Role) {
     await familyApi.changeRole(familyId!, userId, role);

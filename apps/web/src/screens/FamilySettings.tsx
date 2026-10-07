@@ -4,13 +4,12 @@ import { useApp } from '../app/store';
 import { resetDemoData, updateFamilyInDb, familyDbSetCalendar, familyDbSetPhoto, familyDbSetPrivacy, family as familyApi } from '../api/client';
 import { generateGedcom } from '../api/gedcom';
 import { Alert, Button, Card, Field, Input, Modal, Select, Textarea, useToast } from '@ft/ui';
-import { canManage } from '@ft/domain';
 
 export function FamilySettings() {
   const { familyId } = useParams();
   const nav = useNavigate();
   const toast = useToast();
-  const { families, refresh, roleFor } = useApp();
+  const { families, refresh } = useApp();
   const fam = families.find((f) => f.id === familyId);
   const [name, setName] = useState(fam?.name ?? '');
   const [description, setDescription] = useState(fam?.description ?? '');
@@ -23,14 +22,7 @@ export function FamilySettings() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmText, setConfirmText] = useState('');
 
-  if (!canManage(roleFor(familyId))) {
-    return (
-      <Card>
-        <h1>Family settings</h1>
-        <p className="muted">Only family owners and admins can change family settings.</p>
-      </Card>
-    );
-  }
+  // Role refusal lives in the <RequireRole min="admin"> route guard (app/guards.tsx).
 
   async function save() {
     if (!name.trim()) { toast.push('Family name can\'t be empty.', 'danger'); return; }

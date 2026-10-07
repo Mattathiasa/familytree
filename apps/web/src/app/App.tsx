@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppProvider, useApp } from './store';
+import { RequireFamily, RequireRole } from './guards';
 import { Landing } from '../screens/Landing';
 import { Register } from '../screens/Register';
 import { Login } from '../screens/Login';
@@ -116,6 +117,15 @@ function Protected({ children }: { children: React.ReactNode }) {
   return <Shell>{children}</Shell>;
 }
 
+/* Signed in, and a member of the family in the URL. */
+function InFamily({ children }: { children: React.ReactNode }) {
+  return (
+    <Protected>
+      <RequireFamily>{children}</RequireFamily>
+    </Protected>
+  );
+}
+
 export function App() {
   return (
     <AppProvider>
@@ -129,16 +139,16 @@ export function App() {
         <Route path="/invite/:token" element={<Invite />} />
 
         <Route path="/families" element={<Protected><Families /></Protected>} />
-        <Route path="/f/:familyId" element={<Protected><Dashboard /></Protected>} />
-        <Route path="/f/:familyId/tree" element={<Protected><TreeScreen /></Protected>} />
-        <Route path="/f/:familyId/people" element={<Protected><People /></Protected>} />
-        <Route path="/f/:familyId/people/new" element={<Protected><PersonEdit /></Protected>} />
-        <Route path="/f/:familyId/people/:personId" element={<Protected><PersonProfile /></Protected>} />
-        <Route path="/f/:familyId/people/:personId/edit" element={<Protected><PersonEdit /></Protected>} />
-        <Route path="/f/:familyId/memories" element={<Protected><Memories /></Protected>} />
-        <Route path="/f/:familyId/stories" element={<Protected><Stories /></Protected>} />
-        <Route path="/f/:familyId/members" element={<Protected><Members /></Protected>} />
-        <Route path="/f/:familyId/settings" element={<Protected><FamilySettings /></Protected>} />
+        <Route path="/f/:familyId" element={<InFamily><Dashboard /></InFamily>} />
+        <Route path="/f/:familyId/tree" element={<InFamily><TreeScreen /></InFamily>} />
+        <Route path="/f/:familyId/people" element={<InFamily><People /></InFamily>} />
+        <Route path="/f/:familyId/people/new" element={<InFamily><PersonEdit /></InFamily>} />
+        <Route path="/f/:familyId/people/:personId" element={<InFamily><PersonProfile /></InFamily>} />
+        <Route path="/f/:familyId/people/:personId/edit" element={<InFamily><PersonEdit /></InFamily>} />
+        <Route path="/f/:familyId/memories" element={<InFamily><Memories /></InFamily>} />
+        <Route path="/f/:familyId/stories" element={<InFamily><Stories /></InFamily>} />
+        <Route path="/f/:familyId/members" element={<InFamily><RequireRole min="admin"><Members /></RequireRole></InFamily>} />
+        <Route path="/f/:familyId/settings" element={<InFamily><RequireRole min="admin"><FamilySettings /></RequireRole></InFamily>} />
         <Route path="/account" element={<Protected><Account /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
