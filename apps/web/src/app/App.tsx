@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppProvider, useApp } from './store';
 import { RequireFamily, RequireRole } from './guards';
+import { ErrorBoundary } from './ErrorBoundary';
 import { Landing } from '../screens/Landing';
 import { Register } from '../screens/Register';
 import { Login } from '../screens/Login';
@@ -20,6 +21,7 @@ import { Members } from '../screens/Members';
 import { FamilySettings } from '../screens/FamilySettings';
 import { Account } from '../screens/Account';
 import { Memories } from '../screens/Memories';
+import { NotFound } from '../screens/NotFound';
 import { canManage } from '@ft/domain';
 import '../screens/tree.css';
 
@@ -128,30 +130,32 @@ function InFamily({ children }: { children: React.ReactNode }) {
 
 export function App() {
   return (
-    <AppProvider>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/verify" element={<Verify />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/onboard" element={<Protected><Onboard /></Protected>} />
-        <Route path="/invite/:token" element={<Invite />} />
+    <ErrorBoundary>
+      <AppProvider>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/verify" element={<Verify />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/onboard" element={<Protected><Onboard /></Protected>} />
+          <Route path="/invite/:token" element={<Invite />} />
 
-        <Route path="/families" element={<Protected><Families /></Protected>} />
-        <Route path="/f/:familyId" element={<InFamily><Dashboard /></InFamily>} />
-        <Route path="/f/:familyId/tree" element={<InFamily><TreeScreen /></InFamily>} />
-        <Route path="/f/:familyId/people" element={<InFamily><People /></InFamily>} />
-        <Route path="/f/:familyId/people/new" element={<InFamily><PersonEdit /></InFamily>} />
-        <Route path="/f/:familyId/people/:personId" element={<InFamily><PersonProfile /></InFamily>} />
-        <Route path="/f/:familyId/people/:personId/edit" element={<InFamily><PersonEdit /></InFamily>} />
-        <Route path="/f/:familyId/memories" element={<InFamily><Memories /></InFamily>} />
-        <Route path="/f/:familyId/stories" element={<InFamily><Stories /></InFamily>} />
-        <Route path="/f/:familyId/members" element={<InFamily><RequireRole min="admin"><Members /></RequireRole></InFamily>} />
-        <Route path="/f/:familyId/settings" element={<InFamily><RequireRole min="admin"><FamilySettings /></RequireRole></InFamily>} />
-        <Route path="/account" element={<Protected><Account /></Protected>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AppProvider>
+          <Route path="/families" element={<Protected><Families /></Protected>} />
+          <Route path="/f/:familyId" element={<InFamily><Dashboard /></InFamily>} />
+          <Route path="/f/:familyId/tree" element={<InFamily><TreeScreen /></InFamily>} />
+          <Route path="/f/:familyId/people" element={<InFamily><People /></InFamily>} />
+          <Route path="/f/:familyId/people/new" element={<InFamily><PersonEdit /></InFamily>} />
+          <Route path="/f/:familyId/people/:personId" element={<InFamily><PersonProfile /></InFamily>} />
+          <Route path="/f/:familyId/people/:personId/edit" element={<InFamily><PersonEdit /></InFamily>} />
+          <Route path="/f/:familyId/memories" element={<InFamily><Memories /></InFamily>} />
+          <Route path="/f/:familyId/stories" element={<InFamily><Stories /></InFamily>} />
+          <Route path="/f/:familyId/members" element={<InFamily><RequireRole min="admin"><Members /></RequireRole></InFamily>} />
+          <Route path="/f/:familyId/settings" element={<InFamily><RequireRole min="admin"><FamilySettings /></RequireRole></InFamily>} />
+          <Route path="/account" element={<Protected><Account /></Protected>} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AppProvider>
+    </ErrorBoundary>
   );
 }

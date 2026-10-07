@@ -356,3 +356,33 @@
   background: var(--color-border);
   margin: var(--space-5) 0;
 }
+
+/* Error and not-found pages. Rendered both inside the shell (a route that does
+   not exist) and outside it (a render error caught before the shell mounts),
+   so the block centres itself and does not assume a sidebar. */
+.error-page {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+.error-page-inner {
+  max-width: 52ch;
+  text-align: center;
+}
+
+.error-page-inner h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.6rem, 1.4rem + 1vw, 2.2rem);
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.error-page-inner .ft-btn { justify-content: center; }
+.error-page-inner > div:last-of-type { justify-content: center; }
+
+.error-page-inner code {
+  background: var(--color-surface-2, rgba(128, 128, 128, 0.12));
+  border-radius: var(--radius-xs);
+  padding: 2px 6px;
+}
