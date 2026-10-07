@@ -118,11 +118,7 @@ export function seedDb(): MockDb {
     R('r11', 'p-daniel', 'p-nahom', 'parent'),
     R('r12', 'p-sara', 'p-nahom', 'parent'),
     R('r13', 'p-tsehay', 'p-bethlehem', 'spouse', { marriedDate: y(2003), nature: 'unknown' }),
-    R('r14', 'p-alem', 'p-tsehay', 'parent'), // tsehay as alem's child? No — see below
   ];
-
-  // Fix r14: Alem is Abebe's brother → shared parents unknown; instead make Tsehay Abebe & Hana's daughter (r5/r6 already), and drop the odd edge.
-  relationships.pop();
 
   const stories: StoryDto[] = [
     {
