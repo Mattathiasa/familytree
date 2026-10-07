@@ -3,7 +3,8 @@ import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Sparkles, Html, Text } from '@react-three/drei';
 import type { PersonDto, RelationshipDto } from '../api/types';
-import { personLabel } from '../api/client';
+import { livingStatusOf, personLabel } from '../api/client';
+import { layoutTree, type TreeEdge, type TreePerson } from '../tree/layout';
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(
@@ -34,7 +35,6 @@ interface ConstellationNode {
   pos: [number, number, number];
   color: string;
   isLiving: boolean;
-  isRoot: boolean;
 }
 
 const PALETTE = [
@@ -241,38 +241,83 @@ export function TreeConstellation3D({
   onSelect,
   onOpen,
 }: TreeConstellationProps) {
-  // Map people into 3D generational constellation positions
+  /* Positions come from the same layout engine the 2D tree uses.
+
+     They used to come from the array index: the angle was idx * the golden
+     angle, the radius was sqrt(idx), and the height was idx % 3. So a view
+     presented as a "Kinship Constellation" arranged people by the order they
+     happened to arrive in, and the distance between two stars meant nothing.
+     Parents could sit further from their children than from strangers.
+
+     Now generation sets the tier — elders above, descendants below — and ring
+     order follows the layout's left-to-right ordering, so siblings stay
+     adjacent and the shape carries the same information as the flat tree. */
   const nodeMap = useMemo(() => {
     const map = new Map<string, ConstellationNode>();
     if (people.length === 0) return map;
 
-    people.forEach((p, idx) => {
-      // Golden angle spiral distribution with vertical tiers
-      const angle = idx * 2.39996; // Golden angle
-      const radius = 2.5 + Math.sqrt(idx) * 2.2;
-      const height = (idx % 3 - 1) * 2.8 + Math.sin(idx * 0.7) * 1.5;
+    const treePeople: TreePerson[] = people.map((p) => ({
+      id: p.id, givenName: p.givenName, middleName: p.middleName, familyName: p.familyName,
+      nickname: p.nickname, birthDate: p.birthDate, deathDate: p.deathDate,
+      photoUrl: p.photoUrl, gender: p.gender,
+    }));
+    const treeEdges: TreeEdge[] = rels.map((r) => ({
+      id: r.id, from: r.fromPersonId, to: r.toPersonId, kind: r.kind,
+    }));
 
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      const y = height;
+    const layout = layoutTree(people[0]!.id, treePeople, treeEdges);
 
-      const birthYear = p.birthDate?.year ? String(p.birthDate.year) : 'Unknown';
-      const deathYear = p.deathDate?.year ? String(p.deathDate.year) : p.isLiving ? 'Present' : '';
-      const years = deathYear ? `${birthYear} – ${deathYear}` : `b. ${birthYear}`;
+    // Group by generation, ordered by the layout's x within each.
+    const tiers = new Map<number, Array<{ id: string; x: number }>>();
+    for (const node of layout.nodes) {
+      const tier = tiers.get(node.generation) ?? [];
+      tier.push({ id: node.person.id, x: node.x });
+      tiers.set(node.generation, tier);
+    }
+    for (const tier of tiers.values()) tier.sort((a, b) => a.x - b.x);
 
-      map.set(p.id, {
-        id: p.id,
-        name: personLabel(p),
-        years,
-        pos: [x, y, z],
-        color: PALETTE[idx % PALETTE.length]!,
-        isLiving: Boolean(p.isLiving),
-        isRoot: idx === 0,
+    const TIER_HEIGHT = 3.2;
+    const generations = [...tiers.keys()].sort((a, b) => a - b);
+    const midGeneration = (generations[0]! + generations[generations.length - 1]!) / 2;
+
+    let paletteIndex = 0;
+    for (const generation of generations) {
+      const tier = tiers.get(generation)!;
+      // Wider rings for bigger generations, so nobody overlaps.
+      const radius = Math.max(3, 1.6 * tier.length);
+      tier.forEach((entry, position) => {
+        const person = people.find((p) => p.id === entry.id);
+        if (!person) return;
+
+        // A single person in a generation sits on the axis rather than off to one side.
+        const angle = tier.length === 1 ? 0 : (position / tier.length) * Math.PI * 2;
+        const x = tier.length === 1 ? 0 : Math.cos(angle) * radius;
+        const z = tier.length === 1 ? 0 : Math.sin(angle) * radius;
+        const y = (midGeneration - generation) * TIER_HEIGHT;
+
+        const status = livingStatusOf(person);
+        const birthYear = person.birthDate?.year ? String(person.birthDate.year) : 'Unknown';
+        const deathYear = person.deathDate?.year
+          ? String(person.deathDate.year)
+          : status === 'living' ? 'Present' : '';
+        const years = deathYear ? `${birthYear} – ${deathYear}` : `b. ${birthYear}`;
+
+        map.set(person.id, {
+          id: person.id,
+          name: personLabel(person),
+          years,
+          pos: [x, y, z],
+          color: PALETTE[paletteIndex % PALETTE.length]!,
+          // Derived, not the raw flag — every seeded person has isLiving: null,
+          // so this chip never appeared.
+          isLiving: status === 'living',
+        });
+        paletteIndex += 1;
       });
-    });
+    }
 
     return map;
-  }, [people]);
+  }, [people, rels]);
 
   const nodesList = useMemo(() => Array.from(nodeMap.values()), [nodeMap]);
 
