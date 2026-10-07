@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { family as familyApi, personLabel } from '../api/client';
+import { family as familyApi, livingStatusOf, livingTally, personLabel } from '../api/client';
 import type { PersonDto, RelationshipDto } from '../api/types';
 import { useApp } from '../app/store';
 import { Button, EmptyState, Input, Modal, useToast } from '@ft/ui';
@@ -13,6 +13,16 @@ import { TreeConstellation3D } from './TreeConstellation3D';
 import './tree.css';
 
 interface Transform { x: number; y: number; k: number }
+
+/* Living status is derived, never stored (resolveLiving in @ft/domain): an
+   asserted flag, then a death date, then a 110-year window. 'unknown' is a
+   real answer and must not be presented as 'ancestor'. */
+const LIVING_GLYPH = { living: '●', deceased: '✦', unknown: '·' } as const;
+const LIVING_TITLE = {
+  living: 'Living relative (protected)',
+  deceased: 'Ancestor',
+  unknown: 'Living status not recorded',
+} as const;
 
 const MIN_K = 0.35;
 const MAX_K = 2.5;
@@ -58,6 +68,8 @@ export function TreeScreen() {
     }).catch(() => alive && setPeople([]));
     return () => { alive = false; };
   }, [familyId]);
+
+  const livingCounts = useMemo(() => livingTally(people ?? []), [people]);
 
   const treePeople: TreePerson[] = useMemo(
     () => (people ?? []).map((p) => ({
@@ -156,14 +168,14 @@ export function TreeScreen() {
             className={`status-filter-chip ${statusFilter === 'living' ? 'is-active' : ''}`}
             onClick={() => setStatusFilter('living')}
           >
-            <span className="dot-living" /> Living ({people.filter((p) => p.isLiving).length})
+            <span className="dot-living" /> Living ({livingCounts.living})
           </button>
           <button
             type="button"
             className={`status-filter-chip ${statusFilter === 'ancestor' ? 'is-active' : ''}`}
             onClick={() => setStatusFilter('ancestor')}
           >
-            <span className="dot-ancestor">✦</span> Ancestors ({people.filter((p) => !p.isLiving).length})
+            <span className="dot-ancestor">✦</span> Ancestors ({livingCounts.deceased})
           </button>
         </div>
 
@@ -433,8 +445,8 @@ function TreeCanvas({
           const isMatch = matches(n.person);
           const matchesFilter =
             statusFilter === 'all' ||
-            (statusFilter === 'living' && p.isLiving) ||
-            (statusFilter === 'ancestor' && !p.isLiving);
+            (statusFilter === 'living' && livingStatusOf(p) === 'living') ||
+            (statusFilter === 'ancestor' && livingStatusOf(p) === 'deceased');
           const dim = (needle.length > 0 && !isMatch) || !matchesFilter;
           const selected = selectedId === n.person.id;
           const initials = treePersonLabel(n.person).split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -461,10 +473,10 @@ function TreeCanvas({
                 <span className="tree-node-header-row">
                   <span className="tree-node-name">{treePersonLabel(n.person)}</span>
                   <span
-                    className={`node-status-indicator ${p.isLiving ? 'is-living' : 'is-ancestor'}`}
-                    title={p.isLiving ? 'Living relative (Protected)' : 'Ancestor'}
+                    className={`node-status-indicator is-${livingStatusOf(p)}`}
+                    title={LIVING_TITLE[livingStatusOf(p)]}
                   >
-                    {p.isLiving ? '●' : '✦'}
+                    {LIVING_GLYPH[livingStatusOf(p)]}
                   </span>
                 </span>
                 <span className="tree-node-years">{treePersonLifespan(n.person)}</span>

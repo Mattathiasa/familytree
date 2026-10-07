@@ -941,3 +941,9 @@
   margin-bottom: var(--space-4);
 }
 
+
+/* An unrecorded living status is a third answer, not an ancestor (FR-20: every
+   field optional, so "we don't know" has to be representable on screen). */
+.node-status-indicator.is-unknown {
+  color: var(--color-text-faint);
+}

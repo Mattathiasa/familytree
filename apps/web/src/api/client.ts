@@ -638,6 +638,14 @@ export function livingStatusOf(p: PersonDto): 'living' | 'deceased' | 'unknown' 
   return resolveLiving(p.birthDate, p.deathDate, p.isLiving ?? null);
 }
 
+/** Living / deceased / unrecorded counts for a set of people. Derived, never
+    stored — and shared so two screens cannot disagree about the same number. */
+export function livingTally(list: PersonDto[]): { living: number; deceased: number; unknown: number } {
+  const tally = { living: 0, deceased: 0, unknown: 0 };
+  for (const p of list) tally[livingStatusOf(p)] += 1;
+  return tally;
+}
+
 export function canEditPerson(role: Role | null, p: PersonDto, user: SessionUser | null): boolean {
   if (!role || !user) return false;
   return can('edit', { role, visibility: p.visibility, isAuthor: p.createdBy === user.id });

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { family as familyApi, personLabel } from '../api/client';
+import { family as familyApi, livingTally } from '../api/client';
 import type { ActivityItemDto, FamilyStatsDto, PersonDto } from '../api/types';
 import { useApp } from '../app/store';
 import { Button, Card, EmptyState, Skeleton, useReveal } from '@ft/ui';
@@ -33,6 +33,8 @@ export function Dashboard() {
   const [activity, setActivity] = useState<ActivityItemDto[]>([]);
   const [people, setPeople] = useState<PersonDto[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const livingCounts = useMemo(() => livingTally(people), [people]);
 
   const statsRef = useRef<HTMLDivElement>(null);
   const activityRef = useRef<HTMLDivElement>(null);
@@ -133,7 +135,7 @@ export function Dashboard() {
                 <div className="num font-display">{stats.people}</div>
                 <div className="lbl">Total Relatives</div>
                 <small style={{ fontSize: '0.72rem', color: 'var(--color-text-faint)', marginTop: '4px' }}>
-                  {people.filter((p) => p.isLiving).length} living · {people.filter((p) => !p.isLiving).length} ancestors
+                  {livingCounts.living} living · {livingCounts.deceased} ancestors{livingCounts.unknown > 0 ? ` · ${livingCounts.unknown} unrecorded` : ''}
                 </small>
               </div>
 
