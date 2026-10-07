@@ -15,8 +15,9 @@ Full product thinking lives in [`docs/`](./docs) — start with `PRODUCT_PLAN.md
 | Area | State |
 |---|---|
 | Design system + tokens (light/dark, 44px targets, reduced-motion) | ✅ `packages/ui` |
-| Domain logic: dates, Ethiopic⇄Gregorian, names, living-status, permissions, cycle check | ✅ `packages/domain` (66 tests green) |
+| Domain logic: dates, Ethiopic⇄Gregorian, names, living-status, permissions, cycle check | ✅ `packages/domain` (55 tests green) |
 | Pure tree layout engine (deterministic, union-based, cycle-safe) | ✅ `apps/web/src/tree` (11 tests green) |
+| Seed integrity + UI primitives under test | ✅ `npm run seed`, jsdom lane (16 tests green) |
 | Screens: landing, auth, families, dashboard, tree, people, profile, add/edit, stories, members, settings, account | ✅ |
 | Tree interaction: pan/zoom/fit, search-to-highlight, ARIA tree + keyboard, list fallback, add-relative popover | ✅ |
 | Database, file storage, email, worker | ⬜ next milestone (Supabase Postgres planned) |
@@ -39,8 +40,9 @@ Your edits persist in `localStorage`; **Account → Reset demo data** restores t
 ```bash
 npm run dev         # Vite dev server
 npm run build       # typecheck + production build (apps/web/dist)
-npm test            # Vitest — domain + tree layout suites
+npm test            # Vitest — 82 tests: pure logic in node, components in jsdom
 npm run typecheck   # strict TS across all three packages
+npm run seed        # assert the demo seed graph is sound (ids, cycles, dates)
 ```
 
 ## Structure
