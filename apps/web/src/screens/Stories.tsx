@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { family as familyApi, personLabel } from '../api/client';
 import type { PersonDto, StoryDto } from '../api/types';
 import { useApp } from '../app/store';
-import { Avatar, Badge, Button, Card, EmptyState, Field, Input, Modal, Skeleton, Textarea, useToast } from '@ft/ui';
+import { Avatar, Badge, Button, Card, EmptyState, Field, Input, LoadError, Modal, Skeleton, Textarea, useToast } from '@ft/ui';
 
 export function Stories() {
   const { familyId } = useParams();
@@ -18,9 +18,12 @@ export function Stories() {
   const [activeStatus, setActiveStatus] = useState<'all' | 'published' | 'drafts'>('all');
 
   const canWrite = role === 'owner' || role === 'admin' || role === 'contributor';
+  const [loadError, setLoadError] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let alive = true;
+    setLoadError(false);
     Promise.all([
       familyApi.stories(familyId!),
       import('../api/client').then(({ people: api }) => api.list(familyId!)),
@@ -28,6 +31,8 @@ export function Stories() {
       if (!alive) return;
       setStories(s);
       setPeople(p);
+    }).catch(() => {
+      if (alive) setLoadError(true);
     });
     return () => { alive = false; };
   }, [familyId, editing]);
@@ -122,7 +127,9 @@ export function Stories() {
         </div>
       </div>
 
-      {!filtered ? (
+      {loadError ? (
+        <LoadError message="We couldn't load your family's stories." onRetry={() => setReloadToken((t) => t + 1)} />
+      ) : !filtered ? (
         <div style={{ display: 'grid', gap: 'var(--space-3)' }} aria-busy="true">
           <div style={{ height: 160, borderRadius: 'var(--radius-lg)' }}><Skeleton /></div>
           <div style={{ height: 160, borderRadius: 'var(--radius-lg)' }}><Skeleton /></div>

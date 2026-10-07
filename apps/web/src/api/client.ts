@@ -472,11 +472,23 @@ export const family = {
     await delay();
     requireMembership(familyId);
     const famPeople = db.people.filter((p) => p.familyId === familyId);
-    const root = opts?.root ?? db.relationships
-      .filter((r) => r.kind === 'parent' && !db.relationships.some((x) => x.kind === 'parent' && x.toPersonId === r.fromPersonId))
+    const famIds = new Set(famPeople.map((p) => p.id));
+    // Edges were returned unfiltered — every relationship in the database,
+    // including other families'.
+    const famEdges = db.relationships.filter((r) => famIds.has(r.fromPersonId) && famIds.has(r.toPersonId));
+    const root = opts?.root ?? famEdges
+      .filter((r) => r.kind === 'parent' && !famEdges.some((x) => x.kind === 'parent' && x.toPersonId === r.fromPersonId))
       .map((r) => r.fromPersonId)[0] ?? famPeople[0]?.id;
-    if (!root) throw new ApiRequestError('NOT_FOUND', 'This family has no people yet.');
-    return { root, direction: opts?.direction ?? 'descendant', nodes: famPeople, edges: db.relationships, hasMore: false };
+    /* A family with nobody in it yet is an empty state, not a failure
+       (UI_UX.md §7). Throwing NOT_FOUND here meant any caller without a
+       .catch sat on its skeletons forever — which is what Memories did. */
+    return {
+      root: root ?? '',
+      direction: opts?.direction ?? 'descendant',
+      nodes: famPeople,
+      edges: famEdges,
+      hasMore: false,
+    };
   },
 
   async stats(familyId: string): Promise<FamilyStatsDto> {

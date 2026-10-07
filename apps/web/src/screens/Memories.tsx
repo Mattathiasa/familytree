@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { family as familyApi, personLabel } from '../api/client';
 import type { MemoryDto, PersonDto } from '../api/types';
 import { useApp } from '../app/store';
-import { AudioPlayer, Badge, Button, Card, EmptyState, Field, Input, Modal, Select, Skeleton, Textarea, useToast } from '@ft/ui';
+import { AudioPlayer, Badge, Button, Card, EmptyState, Field, Input, LoadError, Modal, Select, Skeleton, Textarea, useToast } from '@ft/ui';
 
 export function Memories() {
   const { familyId } = useParams();
@@ -18,9 +18,12 @@ export function Memories() {
   const [filterPerson, setFilterPerson] = useState<string>('all');
   const [lightboxMemory, setLightboxMemory] = useState<MemoryDto | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let alive = true;
+    setLoadError(false);
     Promise.all([
       familyApi.memories(familyId!),
       familyApi.tree(familyId!).then((t) => t.nodes),
@@ -28,9 +31,11 @@ export function Memories() {
       if (!alive) return;
       setMemories(mems);
       setPeople(folks);
+    }).catch(() => {
+      if (alive) setLoadError(true);
     });
     return () => { alive = false; };
-  }, [familyId]);
+  }, [familyId, reloadToken]);
 
   const filtered = useMemo(() => {
     if (!memories) return null;
@@ -121,7 +126,9 @@ export function Memories() {
       </div>
 
       {/* Grid of Memories */}
-      {!filtered ? (
+      {loadError ? (
+        <LoadError message="We couldn't load your memories." onRetry={() => setReloadToken((t) => t + 1)} />
+      ) : !filtered ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} style={{ height: '320px', borderRadius: '16px' }} />

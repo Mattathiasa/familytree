@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { family as familyApi } from '../api/client';
 import type { InvitationDto, MemberDto } from '../api/types';
 import { useApp } from '../app/store';
-import { Avatar, Badge, Button, Card, Field, Input, Modal, Select, Skeleton, useToast } from '@ft/ui';
+import { Avatar, Badge, Button, Card, Field, Input, LoadError, Modal, Select, Skeleton, useToast } from '@ft/ui';
 import { type Role } from '@ft/domain';
 
 /* Invitations store the path; the shareable link needs the origin, which only
@@ -20,16 +20,21 @@ export function Members() {
   const [members, setMembers] = useState<MemberDto[] | null>(null);
   const [invites, setInvites] = useState<InvitationDto[] | null>(null);
   const [inviting, setInviting] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let alive = true;
+    setLoadError(false);
     Promise.all([familyApi.members(familyId!), familyApi.invitations(familyId!)]).then(([m, i]) => {
       if (!alive) return;
       setMembers(m);
       setInvites(i);
+    }).catch(() => {
+      if (alive) setLoadError(true);
     });
     return () => { alive = false; };
-  }, [familyId]);
+  }, [familyId, reloadToken]);
 
   // Role refusal lives in the <RequireRole min="admin"> route guard (app/guards.tsx),
   // which also stops a Viewer's client from ever fetching the member list.
@@ -83,10 +88,16 @@ export function Members() {
         </div>
       </div>
 
+      {loadError && (
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <LoadError message="We couldn't load this family's members." onRetry={() => setReloadToken((t) => t + 1)} />
+        </div>
+      )}
+
       <Card style={{ marginBottom: 'var(--space-5)' }}>
         <div className="panel-title">Members</div>
         {!members ? (
-          <Skeleton />
+          loadError ? <p className="muted small">Not loaded.</p> : <Skeleton />
         ) : (
           <table className="member-table">
             <thead>

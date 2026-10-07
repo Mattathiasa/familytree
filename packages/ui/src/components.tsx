@@ -185,6 +185,27 @@ export function EmptyState({ icon, title, body, action }: { icon?: string; title
 
 /* ---------------- Skeleton ---------------- */
 
+/* Every error offers a retry that does not lose the user's input, and says a
+   cause and a next step rather than a code (UI_UX.md §7). Five screens had a
+   .then() with no .catch at all, so a rejected load left their skeletons on
+   screen indefinitely. */
+export function LoadError({
+  message = "We couldn't load this.",
+  onRetry,
+}: {
+  message?: string;
+  onRetry: () => void;
+}) {
+  return (
+    <Alert tone="danger">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+        <span>{message} Check your connection and try again.</span>
+        <Button size="sm" variant="secondary" onClick={onRetry}>Try again</Button>
+      </div>
+    </Alert>
+  );
+}
+
 export function Skeleton({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return <div className={`ft-skeleton ${className ?? ''}`} style={style} aria-hidden="true" />;
 }

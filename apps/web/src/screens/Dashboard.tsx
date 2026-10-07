@@ -4,7 +4,7 @@ import { family as familyApi, livingTally } from '../api/client';
 import type { ActivityItemDto, FamilyStatsDto, PersonDto } from '../api/types';
 import { useApp } from '../app/store';
 import { ETHIOPIC_MONTH_NAMES_AM, ethiopicEvangelistYear, gregorianToEthiopic } from '@ft/domain';
-import { Button, Card, EmptyState, Skeleton, useReveal } from '@ft/ui';
+import { Button, Card, EmptyState, LoadError, Skeleton, useReveal } from '@ft/ui';
 import { useButtonHover, useSplitText, useTiltCard } from '../hooks/useScrollAnimation';
 
 function timeAgo(iso: string): string {
@@ -34,6 +34,8 @@ export function Dashboard() {
   const [activity, setActivity] = useState<ActivityItemDto[]>([]);
   const [people, setPeople] = useState<PersonDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   const livingCounts = useMemo(() => livingTally(people), [people]);
 
@@ -53,6 +55,7 @@ export function Dashboard() {
   useEffect(() => {
     let alive = true;
     setLoading(true);
+    setLoadError(false);
     Promise.all([
       familyApi.stats(familyId!),
       familyApi.activity(familyId!),
@@ -64,9 +67,11 @@ export function Dashboard() {
         setActivity(act);
         setPeople(folks);
       })
+      // .finally alone turned a rejection into a permanently empty dashboard.
+      .catch(() => { if (alive) setLoadError(true); })
       .finally(() => alive && setLoading(false));
     return () => { alive = false; };
-  }, [familyId]);
+  }, [familyId, reloadToken]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -125,9 +130,15 @@ export function Dashboard() {
           </Link>
         </div>
 
+        {loadError && (
+          <div style={{ margin: '0 0 var(--space-4)' }}>
+            <LoadError message="We couldn't load your family's dashboard." onRetry={() => setReloadToken((t) => t + 1)} />
+          </div>
+        )}
+
         {/* 4 Key Stat Tiles */}
         <section className="grid-stats" aria-label="Family statistics">
-          {loading || !stats ? (
+          {loadError ? null : loading || !stats ? (
             Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="stat-tile" />)
           ) : (
             <>

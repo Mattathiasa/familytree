@@ -115,3 +115,25 @@ describe('story authorship', () => {
     expect(edited.authorId).toBe('u-1');
   });
 });
+
+describe('an empty family', () => {
+  it('is an empty tree, not a 404 — a rejection left callers on their skeletons', async () => {
+    familyDbCreate('Brand New', '', 'fam-empty');
+    const tree = await familyApi.tree('fam-empty');
+    expect(tree.nodes).toEqual([]);
+    expect(tree.edges).toEqual([]);
+    expect(tree.root).toBe('');
+  });
+
+  it('returns only its own family\'s edges', async () => {
+    familyDbCreate('Brand New', '', 'fam-empty');
+    const a = await familyApi.tree('fam-1');
+    const b = await familyApi.tree('fam-empty');
+
+    const famIds = new Set(a.nodes.map((p) => p.id));
+    expect(a.edges.every((e) => famIds.has(e.fromPersonId) && famIds.has(e.toPersonId))).toBe(true);
+    // fam-1 has relationships; the empty family must not inherit them.
+    expect(a.edges.length).toBeGreaterThan(0);
+    expect(b.edges.length).toBe(0);
+  });
+});
