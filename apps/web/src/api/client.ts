@@ -5,7 +5,7 @@ import {
   can, createsCycle, displayName, resolveLiving, roleAtLeast,
   type FamilyDate, type GraphEdge, type Role,
 } from '@ft/domain';
-import { emptyDb, seedDb, uid, type MockDb, type FamilyInDb } from './mock-db';
+import { emptyDb, seedDb, uid, type MockDb } from './mock-db';
 import type {
   ActivityItemDto, ChangeRecordDto, FamilyLineage, FamilyStatsDto, InvitationDto, MemberDto,
   MemoryDto, PersonDto, RelationshipDto, RelativeGroups, SessionUser, StoryDto,
@@ -617,14 +617,14 @@ export function familyDbSetCalendar(familyId: string, lineage: FamilyLineage): v
 export function familyDbSetPhoto(familyId: string, photoUrl: string | null): void {
   mutate((d) => {
     const fam = d.families.find((f) => f.id === familyId);
-    if (fam) { (fam as FamilyInDb & { photoUrl?: string | null }).photoUrl = photoUrl; }
+    if (fam) { fam.photoUrl = photoUrl; }
   });
 }
 
 export function familyDbSetPrivacy(familyId: string, privacy: 'public' | 'family' | 'private'): void {
   mutate((d) => {
     const fam = d.families.find((f) => f.id === familyId);
-    if (fam) { (fam as FamilyInDb & { privacy?: string }).privacy = privacy; }
+    if (fam) { fam.privacy = privacy; }
   });
 }
 

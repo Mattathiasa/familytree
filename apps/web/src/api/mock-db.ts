@@ -15,6 +15,8 @@ export interface FamilyInDb {
   peopleCount?: number;
   coverGradient?: number;
   lineage?: FamilyLineage;
+  photoUrl?: string | null;
+  privacy?: 'public' | 'family' | 'private';
 }
 
 export interface MockDb {

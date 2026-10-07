@@ -14,8 +14,8 @@ export function FamilySettings() {
   const [name, setName] = useState(fam?.name ?? '');
   const [description, setDescription] = useState(fam?.description ?? '');
   const [calendar, setCalendar] = useState(fam?.lineage === 'ethiopian' ? 'ethiopic' : 'gregorian');
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [privacy, setPrivacy] = useState<'public' | 'family' | 'private'>('family');
+  const [photoUrl, setPhotoUrl] = useState(fam?.photoUrl ?? '');
+  const [privacy, setPrivacy] = useState<'public' | 'family' | 'private'>(fam?.privacy ?? 'family');
   const [exporting, setExporting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
