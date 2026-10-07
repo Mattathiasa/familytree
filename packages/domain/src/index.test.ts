@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   isValidFamilyDate, formatFamilyDate, lifespan,
   ethiopicToGregorian, gregorianToEthiopic, ethiopicToJdn, jdnToEthiopic,
-  isEthiopicLeap, ethiopicMonthLength,
+  isEthiopicLeap, ethiopicMonthLength, ethiopicEvangelistYear, ETHIOPIC_MONTH_NAMES_AM,
   resolveLiving, displayName, initials,
   can, roleAtLeast, canManage,
   createsCycle, kinshipLabel,
@@ -129,6 +129,31 @@ describe('Ethiopic ⇄ Gregorian', () => {
       const back = ethiopicToGregorian(ec.year, ec.month, ec.day);
       expect(back).toEqual({ year: y, month: 3, day: 15 });
     }
+  });
+
+  it('puts Enkutatash on 11 September, and the day after on 2 Meskerem', () => {
+    expect(gregorianToEthiopic(2026, 9, 11)).toEqual({ year: 2019, month: 1, day: 1 });
+    expect(gregorianToEthiopic(2026, 9, 12)).toEqual({ year: 2019, month: 1, day: 2 });
+    expect(gregorianToEthiopic(2025, 9, 11)).toEqual({ year: 2018, month: 1, day: 1 });
+  });
+
+  it('names a month in Ge\'ez for every month the calendar has', () => {
+    expect(ETHIOPIC_MONTH_NAMES_AM).toHaveLength(13);
+    expect(ETHIOPIC_MONTH_NAMES_AM[0]).toBe('መስከረም');
+    expect(ETHIOPIC_MONTH_NAMES_AM[12]).toBe('ጳጉሜን');
+  });
+
+  it('names each year for its evangelist on a four-year cycle', () => {
+    expect(ethiopicEvangelistYear(2017).en).toBe('Matthew');
+    expect(ethiopicEvangelistYear(2018).en).toBe('Mark');
+    expect(ethiopicEvangelistYear(2019).en).toBe('Luke');
+    expect(ethiopicEvangelistYear(2020).en).toBe('John');
+    // John's year is the leap year.
+    expect(isEthiopicLeap(2019)).toBe(true);
+    expect(ethiopicEvangelistYear(2019 + 1).en).toBe('John');
+    // The cycle repeats, and negative input does not fall off the end.
+    expect(ethiopicEvangelistYear(2023).am).toBe(ethiopicEvangelistYear(2019).am);
+    expect(ethiopicEvangelistYear(-1).en).toBe('Luke');
   });
 });
 

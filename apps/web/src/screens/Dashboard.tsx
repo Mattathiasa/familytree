@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { family as familyApi, livingTally } from '../api/client';
 import type { ActivityItemDto, FamilyStatsDto, PersonDto } from '../api/types';
 import { useApp } from '../app/store';
+import { ETHIOPIC_MONTH_NAMES_AM, ethiopicEvangelistYear, gregorianToEthiopic } from '@ft/domain';
 import { Button, Card, EmptyState, Skeleton, useReveal } from '@ft/ui';
 import { useButtonHover, useSplitText, useTiltCard } from '../hooks/useScrollAnimation';
 
@@ -14,15 +15,15 @@ function timeAgo(iso: string): string {
 }
 
 // Ethiopian calendar calculation helper for today
-function getEthiopianToday(): { ethiopic: string; feast?: string } {
-  // Approximate conversion for current date
-  const now = new Date();
-  const day = now.getDate();
-  const month = now.getMonth() + 1; // 1-12
-  // September is Meskerem
+/* Today in the Ethiopian calendar, converted rather than asserted.
+   @ft/domain owns the arithmetic (round-tripped across 1900–2100 EC in its
+   own suite); this only formats the result. */
+function getEthiopianToday(at: Date = new Date()): { ethiopic: string; evangelist: string } {
+  const e = gregorianToEthiopic(at.getFullYear(), at.getMonth() + 1, at.getDate());
+  const month = ETHIOPIC_MONTH_NAMES_AM[e.month - 1] ?? '';
   return {
-    ethiopic: '22 መስከረም 2017 ዓ.ም. (ዘመነ ሉቃስ)',
-    feast: 'Season of Flowers & Harvest (ዘመነ ጽጌ)',
+    ethiopic: `${e.day} ${month} ${e.year} ዓ.ም.`,
+    evangelist: `ዘመነ ${ethiopicEvangelistYear(e.year).am}`,
   };
 }
 
@@ -100,7 +101,7 @@ export function Dashboard() {
               TODAY'S CULTURAL CALENDAR
             </div>
             <div style={{ fontFamily: 'var(--font-ge)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-text)', marginTop: '2px' }} lang="am">
-              {ethToday.ethiopic}
+              {ethToday.ethiopic} <span style={{ fontSize: '0.85rem', fontWeight: 400 }}>({ethToday.evangelist})</span>
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}

@@ -30,6 +30,26 @@ export const ETHIOPIC_MONTH_NAMES = [
   'Megabit', 'Miazia', 'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume',
 ] as const;
 
+/** The same months in Ge'ez script, for an Ethiopian-first UI (spec §55). */
+export const ETHIOPIC_MONTH_NAMES_AM = [
+  'መስከረም', 'ጥቅምት', 'ኅዳር', 'ታኅሣሥ', 'ጥር', 'የካቲት',
+  'መጋቢት', 'ሚያዝያ', 'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜን',
+] as const;
+
+/**
+ * Which evangelist an Ethiopian year is named for. The names run on a
+ * four-year cycle (Matthew, Mark, Luke, John), and the leap year is John's.
+ */
+export function ethiopicEvangelistYear(year: number): { am: string; en: string } {
+  const cycle = [
+    { am: 'ዮሐንስ', en: 'John' },
+    { am: 'ማቴዎስ', en: 'Matthew' },
+    { am: 'ማርቆስ', en: 'Mark' },
+    { am: 'ሉቃስ', en: 'Luke' },
+  ] as const;
+  return cycle[((year % 4) + 4) % 4]!;
+}
+
 /** A person is inferred living if born within this window and no death date. */
 export const LIVING_WINDOW_YEARS = 110;
 
