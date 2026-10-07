@@ -349,6 +349,8 @@ export function createsCycle(edges: GraphEdge[], from: string, to: string): bool
   return false;
 }
 
+const MAX_KINSHIP_HOPS = 6;
+
 /** Human-readable kinship label between two people, computed from the graph. Never hardcoded answers. */
 export function kinshipLabel(
   edges: GraphEdge[],
@@ -356,39 +358,9 @@ export function kinshipLabel(
   toId: string,
 ): string {
   if (fromId === toId) return 'This is you';
-  const parentsOf = new Map<string, string[]>();
-  const childrenOf = new Map<string, string[]>();
-  const spousesOf = new Map<string, string[]>();
-  for (const e of edges) {
-    if (e.kind === 'parent') {
-      (childrenOf.get(e.from) ?? childrenOf.set(e.from, []).get(e.from)!).push(e.to);
-      (parentsOf.get(e.to) ?? parentsOf.set(e.to, []).get(e.to)!).push(e.from);
-    } else if (e.kind === 'spouse') {
-      (spousesOf.get(e.from) ?? spousesOf.set(e.from, []).get(e.from)!).push(e.to);
-      (spousesOf.get(e.to) ?? spousesOf.set(e.to, []).get(e.to)!).push(e.from);
-    }
-  }
-  const key = (a: string, b: string) => `${a}|${b}`;
-  // BFS from `from`, tracking relation path. Depth-capped to keep it bounded.
-  interface Step { id: string; path: string[] }
-  const queue: Step[] = [{ id: fromId, path: [] }];
-  const visited = new Set<string>([fromId]);
-  const MAX = 6;
-  while (queue.length) {
-    const cur = queue.shift()!;
-    if (cur.path.length >= MAX * 2) continue;
-    const expand = (id: string, label: string): void => {
-      if (visited.has(id)) return;
-      visited.add(id);
-      queue.push({ id, path: [...cur.path, label] });
-    };
-    for (const p of parentsOf.get(cur.id) ?? []) expand(p, 'parent');
-    for (const c of childrenOf.get(cur.id) ?? []) expand(c, 'child');
-    for (const s of spousesOf.get(cur.id) ?? []) expand(s, 'spouse');
-    void key;
-  }
-  // Find path to target (BFS above visited-marks; redo without visited for path recovery)
-  const path = findPath(edges, fromId, toId, MAX);
+  /* Depth cap keeps this bounded on a large graph; beyond six hops a label
+     stops being useful to a reader anyway. */
+  const path = findPath(edges, fromId, toId, MAX_KINSHIP_HOPS);
   if (!path) return 'No known relationship';
   return describePath(path);
 }

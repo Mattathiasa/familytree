@@ -48,6 +48,40 @@ describe('layoutTree — structure', () => {
     expect(k1.x).toBeLessThan(k2.x); // earlier birth on the left
   });
 
+  it('orders siblings by birth even when the input array disagrees', () => {
+    // The assertion above passed incidentally for years: the layout ordered by
+    // input position, and the fixture happened to list the elder first. This is
+    // the same claim with the array deliberately out of order.
+    const people = [P('dad', 1940), P('younger', 1968), P('elder', 1965)];
+    const edges: TreeEdge[] = [
+      { id: 'e1', from: 'dad', to: 'younger', kind: 'parent' },
+      { id: 'e2', from: 'dad', to: 'elder', kind: 'parent' },
+    ];
+    const r = layoutTree('dad', people, edges);
+    expect(r.byPersonId.get('elder')!.x).toBeLessThan(r.byPersonId.get('younger')!.x);
+  });
+
+  it('keeps siblings with no recorded birth year in a stable order after those who have one', () => {
+    const people = [P('dad', 1940), P('unknown-a'), P('dated', 1970), P('unknown-b')];
+    const edges: TreeEdge[] = [
+      { id: 'e1', from: 'dad', to: 'unknown-a', kind: 'parent' },
+      { id: 'e2', from: 'dad', to: 'dated', kind: 'parent' },
+      { id: 'e3', from: 'dad', to: 'unknown-b', kind: 'parent' },
+    ];
+    const r = layoutTree('dad', people, edges);
+    const x = (id: string) => r.byPersonId.get(id)!.x;
+
+    // A missing date is normal, not an error (FR-20) — it must not reorder
+    // unpredictably or vanish.
+    expect(x('dated')).toBeLessThan(x('unknown-a'));
+    expect(x('unknown-a')).toBeLessThan(x('unknown-b'));
+
+    // And the whole thing is still deterministic.
+    const again = layoutTree('dad', people, edges);
+    expect(again.nodes.map((n) => [n.person.id, n.x, n.y]))
+      .toEqual(r.nodes.map((n) => [n.person.id, n.x, n.y]));
+  });
+
   it('couples sit adjacent on the same row, joined by a spouse edge', () => {
     const people = [P('a', 1940), P('b', 1942), P('c', 1965)];
     const edges: TreeEdge[] = [

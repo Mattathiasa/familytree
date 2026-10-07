@@ -107,11 +107,34 @@ export function layoutTree(
     }
   }
 
-  // --- unions: a person plus all spouses they are connected to -------------
+  /* --- unions: a person plus all spouses they are connected to -------------
+
+     Union discovery order decides left-to-right placement within a row, so the
+     order people are walked in here is the order siblings appear in. Walking
+     the input array gave insertion order; a genealogy tree is read eldest-first,
+     and layout.test.ts already asserted "earlier birth on the left" — it just
+     passed because the fixture happened to be in order.
+
+     Sorting by birth year makes that true. People with no recorded year keep
+     their input position relative to each other and sort after those who have
+     one, so the result stays fully deterministic (FR-20: a missing date is
+     normal, not an error). */
   const unions: Union[] = [];
   const unionOf = new Map<string, number>();
 
-  for (const p of people) {
+  const byBirthThenInput = people
+    .map((p, index) => ({ p, index }))
+    .sort((a, b) => {
+      const ay = a.p.birthDate?.year;
+      const by = b.p.birthDate?.year;
+      if (ay !== undefined && by !== undefined && ay !== by) return ay - by;
+      if (ay !== undefined && by === undefined) return -1;
+      if (ay === undefined && by !== undefined) return 1;
+      return a.index - b.index;
+    })
+    .map((entry) => entry.p);
+
+  for (const p of byBirthThenInput) {
     if (unionOf.has(p.id)) continue;
     const u: Union = { anchor: p.id, spouses: [], children: new Set<string>(), spouseEdgeIds: [] };
     unions.push(u);
