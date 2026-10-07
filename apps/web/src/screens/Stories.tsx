@@ -44,11 +44,14 @@ export function Stories() {
     setStories(await familyApi.stories(familyId!));
   }
 
+  /* Draft isolation keys off the author's id, not their display name: two
+     relatives with the same name would see each other's drafts, and renaming
+     your own account would hide your drafts from you (SECURITY.md §11.5). */
   const filtered = useMemo(() => {
     if (!stories) return null;
     const q = search.trim().toLowerCase();
     return stories.filter((s) => {
-      const mine = s.authorName === user?.displayName;
+      const mine = !!user && s.authorId === user.id;
       const isDraft = s.status === 'draft';
       if (isDraft && !mine) return false;
 
@@ -143,7 +146,7 @@ export function Stories() {
       ) : (
         <div className="stories-grid">
           {filtered.map((s) => {
-            const mine = s.authorName === user?.displayName;
+            const mine = !!user && s.authorId === user.id;
             const isDraft = s.status === 'draft';
             const tagged = (s.personIds ?? []).map((id) => peopleMap.get(id)).filter(Boolean) as PersonDto[];
 
@@ -259,7 +262,7 @@ export function Stories() {
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 'var(--space-5)' }}>
-            {reading.authorName === user?.displayName && (
+            {!!user && reading.authorId === user.id && (
               <Button variant="secondary" onClick={() => { const s = reading; setReading(null); setEditing(s); }}>
                 Edit Story
               </Button>

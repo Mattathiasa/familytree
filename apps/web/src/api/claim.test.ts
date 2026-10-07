@@ -4,7 +4,7 @@
    from the onboarding path. */
 
 import { describe, expect, it } from 'vitest';
-import { claimedPerson, people, resetDemoData } from './client';
+import { claimedPerson, familyDbCreate, people, resetDemoData } from './client';
 
 describe('creating the person who is you', () => {
   const u1 = { id: 'u-1', email: '', displayName: '', emailVerified: true, locale: 'en' } as const;
@@ -12,6 +12,7 @@ describe('creating the person who is you', () => {
   it('claims the record for the signed-in account', async () => {
     resetDemoData();
     // A brand-new family, as onboarding creates one.
+    familyDbCreate('New Family', '', 'fam-new');
     const me = await people.create('fam-new', { givenName: 'Tesfaye', claimedByMe: true });
     expect(me.userId).toBe('u-1');
     expect(claimedPerson(await people.list('fam-new'), u1)?.id).toBe(me.id);
@@ -26,6 +27,7 @@ describe('creating the person who is you', () => {
 
   it('allows a claim in a different family — one account, many families', async () => {
     resetDemoData();
+    familyDbCreate('Second Family', '', 'fam-two');
     const elsewhere = await people.create('fam-two', { givenName: 'Sara', claimedByMe: true });
     expect(elsewhere.userId).toBe('u-1');
   });
@@ -38,6 +40,7 @@ describe('creating the person who is you', () => {
 
   it('still requires nothing but a name', async () => {
     resetDemoData();
+    familyDbCreate('New Family', '', 'fam-new');
     const me = await people.create('fam-new', { givenName: 'Sara', claimedByMe: true });
     expect(me.birthDate).toBeNull();
     expect(me.occupation).toBe('');

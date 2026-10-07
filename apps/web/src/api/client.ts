@@ -59,6 +59,20 @@ function requireUser(): SessionUser {
   return db.user;
 }
 
+/* Every family-scoped read has to prove membership first. Cross-tenant
+   isolation is the first release-gating security test (SECURITY.md §11.1):
+   a member of family A must not be able to read — or infer the existence of —
+   anything in family B, by any endpoint, including by direct id. Until family
+   switching worked this was invisible; now that the URL selects the family, an
+   unscoped list is a live leak. */
+function requireMembership(familyId: string): SessionUser {
+  const user = requireUser();
+  if (!db.families.some((f) => f.id === familyId)) {
+    throw new ApiRequestError('FORBIDDEN', 'You don\'t have access to this family.');
+  }
+  return user;
+}
+
 /* ---------------- Auth (API.md §2) ---------------- */
 
 export const auth = {
@@ -166,13 +180,13 @@ function requireAName(input: Pick<PersonPatch, 'givenName' | 'middleName' | 'fam
 export const people = {
   async list(familyId: string): Promise<PersonDto[]> {
     await delay();
-    requireUser();
+    requireMembership(familyId);
     return db.people.filter((p) => p.familyId === familyId);
   },
 
   async get(familyId: string, personId: string): Promise<PersonDto> {
     await delay();
-    requireUser();
+    requireMembership(familyId);
     const p = db.people.find((x) => x.familyId === familyId && x.id === personId);
     if (!p) throw new ApiRequestError('NOT_FOUND', 'We couldn\'t find this person.');
     return p;
@@ -180,7 +194,7 @@ export const people = {
 
   async create(familyId: string, input: PersonPatch & { id?: string; claimedByMe?: boolean }): Promise<PersonDto> {
     await delay(200);
-    const user = requireUser();
+    const user = requireMembership(familyId);
     requireAName(input);
     if (input.claimedByMe) {
       /* One account claims at most one person per family, or "me" stops being
@@ -218,7 +232,7 @@ export const people = {
     mutate((d) => {
       d.people.push(person);
       d.activity.unshift({
-        id: uid(), actorName: user.displayName, verb: 'person.created',
+        id: uid(), familyId, actorName: user.displayName, verb: 'person.created',
         summary: `${user.displayName} added ${displayName(person)}`, at: now,
       });
     });
@@ -227,7 +241,7 @@ export const people = {
 
   async update(familyId: string, personId: string, version: number, patch: PersonPatch): Promise<PersonDto> {
     await delay(200);
-    const user = requireUser();
+    const user = requireMembership(familyId);
     const idx = db.people.findIndex((x) => x.familyId === familyId && x.id === personId);
     if (idx === -1) throw new ApiRequestError('NOT_FOUND', 'We couldn\'t find this person.');
     const current = db.people[idx]!;
@@ -275,7 +289,7 @@ export const people = {
       for (const c of changes) d.history.unshift(c);
       if (changes.length) {
         d.activity.unshift({
-          id: uid(), actorName: user.displayName, verb: 'person.updated',
+          id: uid(), familyId, actorName: user.displayName, verb: 'person.updated',
           summary: `${user.displayName} updated ${displayName(updated)}`, at: updated.updatedAt,
         });
       }
@@ -285,7 +299,7 @@ export const people = {
 
   async remove(familyId: string, personId: string): Promise<void> {
     await delay(200);
-    requireUser();
+    requireMembership(familyId);
     mutate((d) => {
       d.people = d.people.filter((p) => !(p.familyId === familyId && p.id === personId));
       d.relationships = d.relationships.filter((r) => r.fromPersonId !== personId && r.toPersonId !== personId);
@@ -294,7 +308,7 @@ export const people = {
 
   async history(familyId: string, personId: string): Promise<ChangeRecordDto[]> {
     await delay();
-    requireUser();
+    requireMembership(familyId);
     // Refuse a person from another family rather than leaking their history.
     const person = db.people.find((p) => p.familyId === familyId && p.id === personId);
     if (!person) throw new ApiRequestError('NOT_FOUND', 'We couldn\'t find this person.');
@@ -307,13 +321,13 @@ export const people = {
 export const relationships = {
   async list(familyId: string): Promise<RelationshipDto[]> {
     await delay();
-    requireUser();
+    requireMembership(familyId);
     return db.relationships.filter((r) => db.people.some((p) => p.id === r.fromPersonId && p.familyId === familyId));
   },
 
   async create(familyId: string, input: { fromPersonId: string; toPersonId: string; kind: 'parent' | 'spouse' }): Promise<RelationshipDto> {
     await delay(150);
-    requireUser();
+    requireMembership(familyId);
     const inFamily = (id: string) => db.people.some((p) => p.id === id && p.familyId === familyId);
     if (!inFamily(input.fromPersonId) || !inFamily(input.toPersonId)) {
       throw new ApiRequestError('NOT_FOUND', 'We couldn\'t find one of these people.');
@@ -339,9 +353,14 @@ export const relationships = {
     return rel;
   },
 
-  async remove(_familyId: string, relationshipId: string): Promise<void> {
+  async remove(familyId: string, relationshipId: string): Promise<void> {
     await delay(150);
-    requireUser();
+    requireMembership(familyId);
+    const famPeople = new Set(db.people.filter((p) => p.familyId === familyId).map((p) => p.id));
+    const rel = db.relationships.find((r) => r.id === relationshipId);
+    if (!rel || !famPeople.has(rel.fromPersonId)) {
+      throw new ApiRequestError('NOT_FOUND', 'We couldn\'t find this relationship.');
+    }
     mutate((d) => { d.relationships = d.relationships.filter((r) => r.id !== relationshipId); });
   },
 };
@@ -351,7 +370,7 @@ export const relationships = {
 export const family = {
   async relatives(familyId: string, personId: string): Promise<RelativeGroups> {
     await delay();
-    requireUser();
+    requireMembership(familyId);
     const byId = (id: string) => db.people.find((p) => p.id === id);
     const parents: RelativeGroups['parents'] = [];
     const children: RelativeGroups['children'] = [];
@@ -387,13 +406,12 @@ export const family = {
     }
     const siblings = [...siblingIds].map((id) => byId(id)).filter((p): p is PersonDto => !!p)
       .map((person) => ({ person }));
-    void familyId;
     return { parents, spouses, children, siblings };
   },
 
   async tree(familyId: string, opts?: { root?: string; direction?: 'descendant' | 'ancestor' }): Promise<TreeResponseDto> {
     await delay();
-    requireUser();
+    requireMembership(familyId);
     const famPeople = db.people.filter((p) => p.familyId === familyId);
     const root = opts?.root ?? db.relationships
       .filter((r) => r.kind === 'parent' && !db.relationships.some((x) => x.kind === 'parent' && x.toPersonId === r.fromPersonId))
@@ -404,7 +422,7 @@ export const family = {
 
   async stats(familyId: string): Promise<FamilyStatsDto> {
     await delay();
-    requireUser();
+    requireMembership(familyId);
     const famPeople = db.people.filter((p) => p.familyId === familyId);
     const years = famPeople.map((p) => p.birthDate?.year).filter((y): y is number => typeof y === 'number');
     // generations = longest parent chain
@@ -434,9 +452,8 @@ export const family = {
 
   async memories(familyId: string): Promise<MemoryDto[]> {
     await delay();
-    requireUser();
-    void familyId;
-    return db.memories ?? [];
+    requireMembership(familyId);
+    return (db.memories ?? []).filter((m) => m.familyId === familyId);
   },
 
   async saveMemory(familyId: string, input: {
@@ -451,13 +468,13 @@ export const family = {
     location?: string;
   }): Promise<MemoryDto> {
     await delay(200);
-    const user = requireUser();
+    const user = requireMembership(familyId);
     if (!input.title.trim()) {
       throw new ApiRequestError('VALIDATION_FAILED', 'Title is required.', { title: 'Give this memory a title.' });
     }
     const now = new Date().toISOString();
     if (input.id) {
-      const idx = (db.memories ?? []).findIndex((m) => m.id === input.id);
+      const idx = (db.memories ?? []).findIndex((m) => m.id === input.id && m.familyId === familyId);
       if (idx === -1) throw new ApiRequestError('NOT_FOUND', 'Memory not found.');
       const updated: MemoryDto = {
         ...db.memories[idx]!,
@@ -491,6 +508,7 @@ export const family = {
       d.memories.unshift(memory);
       d.activity.unshift({
         id: uid(),
+        familyId,
         actorName: user.displayName,
         verb: 'memory.created',
         summary: `${user.displayName} added memory “${memory.title}”`,
@@ -500,9 +518,12 @@ export const family = {
     return memory;
   },
 
-  async deleteMemory(_familyId: string, memoryId: string): Promise<void> {
+  async deleteMemory(familyId: string, memoryId: string): Promise<void> {
     await delay(150);
-    requireUser();
+    requireMembership(familyId);
+    if (!(db.memories ?? []).some((m) => m.id === memoryId && m.familyId === familyId)) {
+      throw new ApiRequestError('NOT_FOUND', 'Memory not found.');
+    }
     mutate((d) => {
       d.memories = (d.memories ?? []).filter((m) => m.id !== memoryId);
     });
@@ -510,15 +531,13 @@ export const family = {
 
   async activity(familyId: string): Promise<ActivityItemDto[]> {
     await delay();
-    requireUser();
-    void familyId;
-    return db.activity.slice(0, 12);
+    requireMembership(familyId);
+    return db.activity.filter((a) => a.familyId === familyId).slice(0, 12);
   },
 
   async upcoming(familyId: string): Promise<UpcomingItemDto[]> {
     await delay();
-    requireUser();
-    void familyId;
+    requireMembership(familyId);
     // Birthdays need exact dates to be meaningful; the seed uses years on purpose,
     // so the demo shows the "add exact dates" nudge instead of fabricated dates.
     return [];
@@ -526,23 +545,21 @@ export const family = {
 
   async members(familyId: string): Promise<MemberDto[]> {
     await delay();
-    requireUser();
-    void familyId;
-    return db.members;
+    requireMembership(familyId);
+    return db.members.filter((m) => m.familyId === familyId);
   },
 
   async invitations(familyId: string): Promise<InvitationDto[]> {
     await delay();
-    requireUser();
-    void familyId;
-    return db.invitations;
+    requireMembership(familyId);
+    return db.invitations.filter((i) => i.familyId === familyId);
   },
 
   async invite(familyId: string, input: { email?: string; role: Role }): Promise<InvitationDto> {
     await delay(200);
-    requireUser();
+    requireMembership(familyId);
     const inv: InvitationDto = {
-      id: uid(), email: input.email ?? '', role: input.role, status: 'pending',
+      id: uid(), familyId, email: input.email ?? '', role: input.role, status: 'pending',
       inviteUrl: `https://familytree.app/invite/${uid().slice(0, 8)}…`,
       createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 30 * 864e5).toISOString(),
     };
@@ -550,9 +567,12 @@ export const family = {
     return inv;
   },
 
-  async revokeInvitation(_familyId: string, invitationId: string): Promise<void> {
+  async revokeInvitation(familyId: string, invitationId: string): Promise<void> {
     await delay(150);
-    requireUser();
+    requireMembership(familyId);
+    if (!db.invitations.some((i) => i.id === invitationId && i.familyId === familyId)) {
+      throw new ApiRequestError('NOT_FOUND', 'We couldn\'t find this invitation.');
+    }
     mutate((d) => {
       const inv = d.invitations.find((i) => i.id === invitationId);
       if (inv) inv.status = 'revoked';
@@ -567,61 +587,81 @@ export const family = {
       if (inv && inv.status === 'pending') {
         inv.status = 'accepted';
         d.members.push({
+          familyId: inv.familyId,
           userId: user.id,
           name: user.displayName,
           email: user.email,
           role: inv.role,
           joinedAt: new Date().toISOString(),
         });
+        // Accepting is what makes the family visible to this account.
+        if (!d.families.some((f) => f.id === inv.familyId)) {
+          d.families.push({
+            id: inv.familyId, name: 'Family', description: '',
+            role: inv.role, coverGradient: d.families.length,
+          });
+        }
       }
     });
   },
 
-  async changeRole(_familyId: string, userId: string, role: Role): Promise<void> {
+  async changeRole(familyId: string, userId: string, role: Role): Promise<void> {
     await delay(150);
-    requireUser();
+    requireMembership(familyId);
     mutate((d) => {
-      const m = d.members.find((x) => x.userId === userId);
+      // Scoped: this used to change the user's role in every family at once.
+      const m = d.members.find((x) => x.userId === userId && x.familyId === familyId);
       if (m) m.role = role;
+      // Keep the caller's own family list in step when they change their own role.
+      const own = d.families.find((f) => f.id === familyId);
+      if (own && d.user?.id === userId) own.role = role;
     });
   },
 
-  async removeMember(_familyId: string, userId: string): Promise<void> {
+  async removeMember(familyId: string, userId: string): Promise<void> {
     await delay(150);
-    requireUser();
-    mutate((d) => { d.members = d.members.filter((m) => m.userId !== userId); });
+    requireMembership(familyId);
+    // Scoped: this used to drop the user from every family they belonged to.
+    mutate((d) => { d.members = d.members.filter((m) => !(m.userId === userId && m.familyId === familyId)); });
   },
 
   async stories(familyId: string): Promise<StoryDto[]> {
     await delay();
-    requireUser();
-    void familyId;
-    return db.stories;
+    requireMembership(familyId);
+    return db.stories.filter((s) => s.familyId === familyId);
   },
 
   async saveStory(familyId: string, input: { id?: string; title: string; body: string; periodLabel?: string; personIds?: string[]; status?: 'draft' | 'published' }): Promise<StoryDto> {
     await delay(200);
-    const user = requireUser();
+    const user = requireMembership(familyId);
     if (!input.title.trim()) {
       throw new ApiRequestError('VALIDATION_FAILED', 'Some of the details you entered need attention.', { title: 'Give the story a title.' });
     }
     const now = new Date().toISOString();
     if (input.id) {
-      const idx = db.stories.findIndex((s) => s.id === input.id);
+      const idx = db.stories.findIndex((s) => s.id === input.id && s.familyId === familyId);
       if (idx === -1) throw new ApiRequestError('NOT_FOUND', 'We couldn\'t find this story.');
-      const updated: StoryDto = { ...db.stories[idx]!, title: input.title, body: input.body, periodLabel: input.periodLabel ?? db.stories[idx]!.periodLabel, personIds: input.personIds ?? db.stories[idx]!.personIds, status: input.status ?? db.stories[idx]!.status, updatedAt: now };
+      const existing = db.stories[idx]!;
+      /* An unpublished draft belongs to its author alone (SECURITY.md §11.5),
+         and nobody edits someone else's story in place — a correction goes
+         through the suggestion flow instead (spec §48, §49). */
+      if (existing.authorId !== user.id) {
+        throw new ApiRequestError('FORBIDDEN', 'Only the author can edit this story.');
+      }
+      const updated: StoryDto = { ...existing, title: input.title, body: input.body, periodLabel: input.periodLabel ?? existing.periodLabel, personIds: input.personIds ?? existing.personIds, status: input.status ?? existing.status, updatedAt: now };
       mutate((d) => { d.stories[idx] = updated; });
       return updated;
     }
     const story: StoryDto = {
-      id: uid(), title: input.title, body: input.body, authorName: user.displayName,
+      id: uid(), familyId, title: input.title, body: input.body,
+      authorId: user.id, authorName: user.displayName,
       periodLabel: input.periodLabel ?? '', status: input.status ?? 'draft',
       personIds: input.personIds ?? [], updatedAt: now,
     };
     mutate((d) => {
       d.stories.unshift(story);
       if (story.status === 'published') {
-        d.activity.unshift({ id: uid(), actorName: user.displayName, verb: 'story.created', summary: `${user.displayName} published “${story.title}”`, at: now });
+        d.activity.unshift({ id: uid(), familyId, actorName: user.displayName, verb: 'story.created', summary: `${user.displayName} published “${story.title}”`, at: now });
       }
     });
     return story;
@@ -635,6 +675,12 @@ export function familyDbCreate(name: string, description: string, id: string, li
   if (!user) return;
   mutate((d) => {
     d.families.push({ id, name, description, role: 'owner', peopleCount: 0, coverGradient: d.families.length, lineage });
+    // The creator is a member, not just an owner flag — otherwise a brand-new
+    // family's Members page is empty and role changes have nothing to act on.
+    d.members.push({
+      familyId: id, userId: user.id, name: user.displayName, email: user.email,
+      role: 'owner', joinedAt: new Date().toISOString(),
+    });
     d.activeFamilyId = id;
   });
 }

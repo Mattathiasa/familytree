@@ -125,17 +125,17 @@ export function seedDb(): MockDb {
 
   const stories: StoryDto[] = [
     {
-      id: 'st-1', title: 'Grandfather\'s Journey', authorName: 'Sara Tesfaye',
+      id: 'st-1', familyId: fam.id, title: 'Grandfather\'s Journey', authorId: U, authorName: 'Sara Tesfaye',
       body: 'Abebe left Gondar in 1966 with two shirts and a suitcase of books. He walked to Gondar station, took the bus to Addis, and arrived with less than a dollar. "The city is big," he wrote to his mother, "but my hands are trained." He was admitted to teachers\' college that spring.',
       periodLabel: '1966', status: 'published', personIds: ['p-abebe'], updatedAt: '2026-09-10T09:00:00Z',
     },
     {
-      id: 'st-2', title: 'How Grandma Met Grandpa', authorName: 'Sara Tesfaye',
+      id: 'st-2', familyId: fam.id, title: 'How Grandma Met Grandpa', authorId: U, authorName: 'Sara Tesfaye',
       body: 'Hana sold woven baskets beside the school where Abebe taught. He bought one every month until she laughed and asked if his house had walls left.',
       periodLabel: 'c. 1968', status: 'published', personIds: ['p-abebe', 'p-hana'], updatedAt: '2026-09-12T09:00:00Z',
     },
     {
-      id: 'st-3', title: 'The Coffee Ceremony Rules (as Ababa insists)', authorName: 'Mikael Tesfaye',
+      id: 'st-3', familyId: fam.id, title: 'The Coffee Ceremony Rules (as Ababa insists)', authorId: 'u-3', authorName: 'Mikael Tesfaye',
       body: 'Draft: 1. The youngest pours. 2. No business before the third cup. 3. Guests sit closest to the rekebot. …',
       periodLabel: 'Traditions', status: 'draft', personIds: ['p-hana'], updatedAt: '2026-09-20T09:00:00Z',
     },
@@ -148,20 +148,20 @@ export function seedDb(): MockDb {
   ];
 
   const activity: ActivityItemDto[] = [
-    { id: 'a1', actorName: 'Tsehay Abebe', verb: 'person.updated', summary: 'Tsehay corrected Abebe\'s birth year', at: '2026-09-18T14:30:00Z' },
-    { id: 'a2', actorName: 'Mikael Tesfaye', verb: 'story.created', summary: 'Mikael started a story about the coffee ceremony', at: '2026-09-20T09:00:00Z' },
-    { id: 'a3', actorName: 'Sara Tesfaye', verb: 'story.created', summary: 'Sara published "Grandfather\'s Journey"', at: '2026-09-10T09:00:00Z' },
+    { id: 'a1', familyId: fam.id, actorName: 'Tsehay Abebe', verb: 'person.updated', summary: 'Tsehay corrected Abebe\'s birth year', at: '2026-09-18T14:30:00Z' },
+    { id: 'a2', familyId: fam.id, actorName: 'Mikael Tesfaye', verb: 'story.created', summary: 'Mikael started a story about the coffee ceremony', at: '2026-09-20T09:00:00Z' },
+    { id: 'a3', familyId: fam.id, actorName: 'Sara Tesfaye', verb: 'story.created', summary: 'Sara published "Grandfather\'s Journey"', at: '2026-09-10T09:00:00Z' },
   ];
 
   const members: MemberDto[] = [
-    { userId: 'u-1', name: 'Sara Tesfaye', email: 'sara@example.com', role: 'owner', joinedAt: '2026-08-01T00:00:00Z' },
-    { userId: 'u-2', name: 'Tsehay Abebe', email: 'tsehay@example.com', role: 'contributor', joinedAt: '2026-08-14T00:00:00Z' },
-    { userId: 'u-3', name: 'Mikael Tesfaye', email: 'mikael@example.com', role: 'contributor', joinedAt: '2026-08-20T00:00:00Z' },
-    { userId: 'u-4', name: 'Bethlehem Girma', email: 'bethlehem@example.com', role: 'viewer', joinedAt: '2026-09-02T00:00:00Z' },
+    { familyId: fam.id, userId: 'u-1', name: 'Sara Tesfaye', email: 'sara@example.com', role: 'owner', joinedAt: '2026-08-01T00:00:00Z' },
+    { familyId: fam.id, userId: 'u-2', name: 'Tsehay Abebe', email: 'tsehay@example.com', role: 'contributor', joinedAt: '2026-08-14T00:00:00Z' },
+    { familyId: fam.id, userId: 'u-3', name: 'Mikael Tesfaye', email: 'mikael@example.com', role: 'contributor', joinedAt: '2026-08-20T00:00:00Z' },
+    { familyId: fam.id, userId: 'u-4', name: 'Bethlehem Girma', email: 'bethlehem@example.com', role: 'viewer', joinedAt: '2026-09-02T00:00:00Z' },
   ];
 
   const invitations: InvitationDto[] = [
-    { id: 'inv-1', email: 'nahom@example.com', role: 'contributor', status: 'pending', inviteUrl: 'https://familytree.app/invite/9f3k…', createdAt: '2026-09-25T00:00:00Z', expiresAt: '2026-10-25T00:00:00Z' },
+    { id: 'inv-1', familyId: fam.id, email: 'nahom@example.com', role: 'contributor', status: 'pending', inviteUrl: 'https://familytree.app/invite/9f3k…', createdAt: '2026-09-25T00:00:00Z', expiresAt: '2026-10-25T00:00:00Z' },
   ];
 
   const memories: MemoryDto[] = [

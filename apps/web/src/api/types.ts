@@ -79,8 +79,12 @@ export interface ChangeRecordDto {
 
 export interface StoryDto {
   id: string;
+  familyId: string;
   title: string;
   body: string;
+  /* authorName is for display; authorId is what draft isolation is decided on
+     (SECURITY.md §11.5) — names are neither unique nor stable. */
+  authorId: string;
   authorName: string;
   periodLabel: string;
   status: 'draft' | 'published';
@@ -106,6 +110,7 @@ export interface MemoryDto {
 
 export interface ActivityItemDto {
   id: string;
+  familyId: string;
   actorName: string;
   verb: string;
   summary: string;
@@ -132,6 +137,7 @@ export interface FamilyStatsDto {
 }
 
 export interface MemberDto {
+  familyId: string;
   userId: string;
   name: string;
   email: string;
@@ -141,6 +147,7 @@ export interface MemberDto {
 
 export interface InvitationDto {
   id: string;
+  familyId: string;
   email: string;
   role: Role;
   status: 'pending' | 'accepted' | 'revoked' | 'rejected';
