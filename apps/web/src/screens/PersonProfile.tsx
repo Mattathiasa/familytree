@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { canDeletePerson, canEditPerson, family as familyApi, personLabel } from '../api/client';
 import type { ChangeRecordDto, MemoryDto, PersonDto, RelativeGroups, StoryDto } from '../api/types';
-import { AudioPlayer, Avatar, Badge, Button, Card, Modal, Skeleton, useToast } from '@ft/ui';
+import { activatable, AudioPlayer, Avatar, Badge, Button, Card, Modal, Skeleton, useToast } from '@ft/ui';
 import { convertYear, formatFamilyDate, lifespan, resolveLiving } from '@ft/domain';
 import { useApp } from '../app/store';
 
@@ -267,7 +267,7 @@ export function PersonProfile() {
                         background: 'var(--color-surface)',
                         cursor: 'pointer',
                       }}
-                      onClick={() => setActiveTab('memories')}
+                      {...activatable(() => setActiveTab('memories'), `Open “${m.title}” in Stories & Memories`)}
                     >
                       {m.type === 'photo' && m.url ? (
                         <img src={m.url} alt={m.title} style={{ width: '100%', height: 90, objectFit: 'cover' }} />

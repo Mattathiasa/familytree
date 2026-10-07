@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { family as familyApi, personLabel } from '../api/client';
 import type { MemoryDto, PersonDto } from '../api/types';
 import { useApp } from '../app/store';
-import { AudioPlayer, Badge, Button, Card, EmptyState, Field, Input, LoadError, Modal, Select, Skeleton, Textarea, useToast } from '@ft/ui';
+import { activatable, AudioPlayer, Badge, Button, Card, EmptyState, Field, Input, LoadError, Modal, Select, Skeleton, Textarea, useToast } from '@ft/ui';
 
 export function Memories() {
   const { familyId } = useParams();
@@ -173,7 +173,7 @@ export function Memories() {
                 {/* Media Presentation */}
                 {item.type === 'photo' || item.type === 'document' ? (
                   <div
-                    onClick={() => setLightboxMemory(item)}
+                    {...activatable(() => setLightboxMemory(item), `View “${item.title}” larger`)}
                     style={{
                       height: '200px',
                       background: '#150d09',

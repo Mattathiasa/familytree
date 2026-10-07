@@ -79,6 +79,29 @@ export function Select({ className, children, ...rest }: SelectHTMLAttributes<HT
   return <select className={`ft-input ft-select ${className ?? ''}`} {...rest}>{children}</select>;
 }
 
+/* An element that behaves like a button but must stay a div — a whole card
+   whose body contains headings and text that a <button> would flatten.
+
+   Three screens had `<div onClick={…}>` with no role, no tabIndex and no key
+   handler, so a keyboard or screen-reader user could not reach them at all
+   (UI_UX.md §8: everything reachable and operable). Spread these props rather
+   than re-deriving the pattern each time. */
+export function activatable(onActivate: () => void, label: string) {
+  return {
+    role: 'button' as const,
+    tabIndex: 0,
+    'aria-label': label,
+    onClick: onActivate,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      // Enter and Space are what a real button answers to.
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onActivate();
+      }
+    },
+  };
+}
+
 /* ---------------- Card ---------------- */
 
 export function Card({ className, children, ...rest }: { className?: string; children: ReactNode } & React.ComponentProps<'div'>) {

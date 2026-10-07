@@ -5,7 +5,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Button, Field, Input } from './components';
+import { activatable, Button, Field, Input } from './components';
 
 describe('Button', () => {
   it('calls onClick when pressed', async () => {
@@ -60,5 +60,38 @@ describe('Field', () => {
     const input = screen.getByLabelText('Given name');
     await userEvent.click(screen.getByText('Given name'));
     expect(document.activeElement).toBe(input);
+  });
+});
+
+describe('activatable', () => {
+  it('gives a div button semantics a keyboard can reach', async () => {
+    const onActivate = vi.fn();
+    render(<div {...activatable(onActivate, 'Read the story')}>Card body</div>);
+
+    const el = screen.getByRole('button', { name: 'Read the story' });
+    expect(el.getAttribute('tabindex')).toBe('0');
+
+    await userEvent.click(el);
+    expect(onActivate).toHaveBeenCalledTimes(1);
+  });
+
+  it('answers to Enter and Space, as a real button would', async () => {
+    const onActivate = vi.fn();
+    render(<div {...activatable(onActivate, 'Read the story')}>Card body</div>);
+
+    const el = screen.getByRole('button', { name: 'Read the story' });
+    el.focus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard(' ');
+    expect(onActivate).toHaveBeenCalledTimes(2);
+  });
+
+  it('ignores other keys', async () => {
+    const onActivate = vi.fn();
+    render(<div {...activatable(onActivate, 'Read the story')}>Card body</div>);
+
+    screen.getByRole('button', { name: 'Read the story' }).focus();
+    await userEvent.keyboard('{Escape}a{ArrowDown}');
+    expect(onActivate).not.toHaveBeenCalled();
   });
 });

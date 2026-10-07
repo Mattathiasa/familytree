@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { family as familyApi, personLabel } from '../api/client';
 import type { PersonDto, StoryDto } from '../api/types';
 import { useApp } from '../app/store';
-import { Avatar, Badge, Button, Card, EmptyState, Field, Input, LoadError, Modal, Skeleton, Textarea, useToast } from '@ft/ui';
+import { activatable, Avatar, Badge, Button, Card, EmptyState, Field, Input, LoadError, Modal, Skeleton, Textarea, useToast } from '@ft/ui';
 
 export function Stories() {
   const { familyId } = useParams();
@@ -165,7 +165,7 @@ export function Stories() {
                   cursor: 'pointer',
                   transition: 'transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease), border-color var(--speed) var(--ease)',
                 }}
-                onClick={() => setReading(s)}
+                {...activatable(() => setReading(s), `Read “${s.title}”`)}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <Badge tone={isDraft ? 'neutral' : 'accent'}>
