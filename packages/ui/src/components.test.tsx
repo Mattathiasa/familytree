@@ -26,6 +26,31 @@ describe('Button', () => {
 });
 
 describe('Field', () => {
+  it('describes the control with its hint and its error', () => {
+    render(
+      <Field label="Birth year" hint="Leave blank if unknown." error="That year is in the future.">
+        {(id) => <Input id={id} />}
+      </Field>,
+    );
+    const input = screen.getByLabelText('Birth year');
+    const ids = (input.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
+    const described = ids.map((id) => document.getElementById(id)?.textContent);
+    expect(described).toContain('Leave blank if unknown.');
+    expect(described).toContain('That year is in the future.');
+  });
+
+  it('leaves an explicit aria-describedby alone', () => {
+    render(
+      <>
+        <p id="mine">Ask a relative.</p>
+        <Field label="Nickname" hint="Optional.">
+          {(id) => <Input id={id} aria-describedby="mine" />}
+        </Field>
+      </>,
+    );
+    expect(screen.getByLabelText('Nickname').getAttribute('aria-describedby')).toBe('mine');
+  });
+
   it('associates the label with the control, so clicking it focuses the input', async () => {
     render(
       <Field label="Given name">

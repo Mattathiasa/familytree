@@ -4,8 +4,8 @@
    - 44px minimum touch targets */
 
 import {
-  createContext, useContext, useEffect, useId, useRef, useState,
-  type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode,
+  cloneElement, createContext, Fragment, isValidElement, useContext, useEffect, useId, useRef, useState,
+  type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactElement, type ReactNode,
   type SelectHTMLAttributes, type TextareaHTMLAttributes,
 } from 'react';
 
@@ -43,11 +43,25 @@ export function Field({ label, hint, error, children }: FieldProps) {
   const id = useId();
   const errId = `${id}-err`;
   const hintId = `${id}-hint`;
+  const describedBy = [hint ? hintId : null, error ? errId : null].filter(Boolean).join(' ') || undefined;
+
+  /* The hint and the error have to be announced with the control, not just
+     rendered near it (UI_UX.md §8). describedBy is still handed to the render
+     prop for callers that need to compose it, but it is applied here too so a
+     new field cannot forget it — which is what happened at every call site
+     when this was the caller's job. An explicit aria-describedby wins. */
+  const control = children(id, describedBy);
+  const described =
+    describedBy && isValidElement(control) && control.type !== Fragment
+      && (control.props as { 'aria-describedby'?: string })['aria-describedby'] === undefined
+      ? cloneElement(control as ReactElement<{ 'aria-describedby'?: string }>, { 'aria-describedby': describedBy })
+      : control;
+
   return (
     <div className="ft-field">
       <label className="ft-label" htmlFor={id}>{label}</label>
       {hint ? <p className="ft-hint" id={hintId}>{hint}</p> : null}
-      {children(id, [hint ? hintId : null, error ? errId : null].filter(Boolean).join(' ') || undefined)}
+      {described}
       {error ? <p className="ft-error" id={errId} role="alert">{error}</p> : null}
     </div>
   );
