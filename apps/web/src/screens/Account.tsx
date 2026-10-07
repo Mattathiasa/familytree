@@ -4,7 +4,8 @@ import { auth, resetDemoData, family as familyApi } from '../api/client';
 import { generateGedcom } from '../api/gedcom';
 import { useApp } from '../app/store';
 import { Avatar, Badge, Button, Card, Field, Input, Select, useToast } from '@ft/ui';
-import type { SessionUser } from '../api/types';
+import type { NotificationPrefs, SessionUser } from '../api/types';
+import { DEFAULT_NOTIFICATION_PREFS } from '../api/types';
 
 export function Account() {
   const { user, familyId, families, refresh } = useApp();
@@ -15,8 +16,18 @@ export function Account() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const notifications = { ...DEFAULT_NOTIFICATION_PREFS, ...user?.notifications };
 
   const fam = families.find((f) => f.id === familyId);
+
+  async function setNotification(key: keyof NotificationPrefs, value: boolean) {
+    try {
+      await auth.updateProfile({ notifications: { [key]: value } });
+      refresh();
+    } catch {
+      toast.push('We couldn\'t save that preference. Try again.', 'danger');
+    }
+  }
 
   async function signOut() {
     await auth.logout();
@@ -100,7 +111,9 @@ export function Account() {
             </h2>
             <div style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span>{user?.email}</span>
-              <Badge tone="success">Verified</Badge>
+              {user?.emailVerified
+                ? <Badge tone="success">Verified</Badge>
+                : <Badge tone="danger">Not verified</Badge>}
             </div>
           </div>
         </div>
@@ -134,19 +147,26 @@ export function Account() {
         <p className="muted small" style={{ marginBottom: 'var(--space-4)' }}>
           Control when and how you receive updates about your family archive.
         </p>
+        {/* These were defaultChecked with no onChange and nothing behind them,
+            so every visit showed the same two ticks and a reload undid any
+            click. Spec §40/§42: every reminder must be individually
+            disableable, which means the choice has to be stored. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer' }}>
-            <input type="checkbox" defaultChecked style={{ width: 18, height: 18, cursor: 'pointer' }} />
-            <span>Email me when someone adds a story or memory</span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer' }}>
-            <input type="checkbox" defaultChecked style={{ width: 18, height: 18, cursor: 'pointer' }} />
-            <span>Notify me about family birthdays and anniversaries</span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer' }}>
-            <input type="checkbox" style={{ width: 18, height: 18, cursor: 'pointer' }} />
-            <span>Weekly digest of family tree activity</span>
-          </label>
+          {([
+            ['contentAdded', 'Email me when someone adds a story or memory'],
+            ['occasions', 'Notify me about family birthdays and anniversaries'],
+            ['weeklyDigest', 'Weekly digest of family tree activity'],
+          ] as const).map(([key, label]) => (
+            <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={notifications[key]}
+                onChange={(e) => void setNotification(key, e.target.checked)}
+                style={{ width: 18, height: 18, cursor: 'pointer' }}
+              />
+              <span>{label}</span>
+            </label>
+          ))}
         </div>
       </Card>
 

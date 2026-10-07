@@ -12,6 +12,7 @@ export function Verify() {
   const [resending, setResending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   async function verify() {
     setBusy(true);
@@ -26,14 +27,23 @@ export function Verify() {
     }
   }
 
+  /* This was a 500ms setTimeout that reported success having sent nothing.
+     There is no mail transport until the backend lands, so say so rather than
+     letting someone wait for an email that will never arrive. */
   async function resend() {
     setResending(true);
     setError(null);
     try {
-      await new Promise<void>((r) => setTimeout(r, 500));
-      // Mock: in production this triggers a real email send
-    } catch {
-      // noop
+      const { sent, reason } = await auth.resendVerification();
+      if (sent) {
+        setNotice('Verification email sent. Check your inbox.');
+      } else if (reason === 'already-verified') {
+        setNotice('This address is already verified.');
+      } else {
+        setNotice('No email can be sent in this demo build — use the button above to verify directly.');
+      }
+    } catch (err) {
+      setError((err as Error).message ?? 'We couldn\'t do that just now.');
     } finally {
       setResending(false);
     }
@@ -67,6 +77,7 @@ export function Verify() {
               In production this arrives by email. In this demo, verification is one click.
             </p>
             {error && <Alert tone="danger">{error}</Alert>}
+            {notice && <Alert tone="info">{notice}</Alert>}
             <Button onClick={verify} loading={busy} className="ft-btn--xl" style={{ width: '100%' }}>Verify now</Button>
             <p className="auth-alt" style={{ marginTop: 'var(--space-3)' }}>
               Didn't receive an email? <button type="button" className="ft-link" onClick={resend} disabled={resending}>

@@ -3,12 +3,27 @@ import type { FamilyDate, Role, Visibility } from '@ft/domain';
 /* Types mirror API.md §1–§8. The mock data layer and a future live client
    both speak exactly these shapes, so swapping the transport is local. */
 
+/** Per-user reminder and digest preferences (spec §40, §42: every reminder
+    must be individually disableable). */
+export interface NotificationPrefs {
+  contentAdded: boolean;
+  occasions: boolean;
+  weeklyDigest: boolean;
+}
+
+export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
+  contentAdded: true,
+  occasions: true,
+  weeklyDigest: false,
+};
+
 export interface SessionUser {
   id: string;
   email: string;
   displayName: string;
   emailVerified: boolean;
   locale: 'en' | 'am';
+  notifications?: NotificationPrefs;
 }
 
 export interface FamilySummary {

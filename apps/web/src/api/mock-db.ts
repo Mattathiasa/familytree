@@ -19,6 +19,13 @@ export interface FamilyInDb {
   privacy?: 'public' | 'family' | 'private';
 }
 
+export interface PasswordResetInDb {
+  token: string;
+  email: string;
+  expiresAt: string;
+  usedAt: string | null;
+}
+
 export interface MockDb {
   user: SessionUser | null;
   families: FamilyInDb[];
@@ -31,6 +38,7 @@ export interface MockDb {
   activity: ActivityItemDto[];
   members: MemberDto[];
   invitations: InvitationDto[];
+  passwordResets?: PasswordResetInDb[];
 }
 
 const uid = (): string =>
@@ -42,6 +50,7 @@ export function emptyDb(): MockDb {
   return {
     user: null, families: [], activeFamilyId: null,
     people: [], relationships: [], stories: [], memories: [], history: [], activity: [], members: [], invitations: [],
+    passwordResets: [],
   };
 }
 
@@ -200,6 +209,7 @@ export function seedDb(): MockDb {
   return {
     user, families: [fam], activeFamilyId: fam.id,
     people, relationships, stories, memories, history, activity, members, invitations,
+    passwordResets: [],
   };
 }
 

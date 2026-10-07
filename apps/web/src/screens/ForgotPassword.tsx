@@ -10,6 +10,7 @@ export function ForgotPassword() {
   const nav = useNavigate();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [resetLink, setResetLink] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +19,10 @@ export function ForgotPassword() {
     setBusy(true);
     setError(null);
     try {
-      await auth.sendPasswordReset(email);
+      const { token } = await auth.sendPasswordReset(email);
+      // No mail transport yet, so the link is shown here rather than promised
+      // to a console that nothing ever wrote to.
+      setResetLink(`/reset/${token}`);
       setSubmitted(true);
     } catch (err) {
       setError((err as Error).message ?? 'Something went wrong. Please try again.');
@@ -48,8 +52,17 @@ export function ForgotPassword() {
                 If an account exists for <strong>{email}</strong>, we've sent a password reset link.
                 It expires in 60 minutes.
               </p>
-              <Alert tone="success">Reset link sent. This is a demo — check the console for the token.</Alert>
-              <Button onClick={() => nav('/login')} className="ft-btn--xl" style={{ width: '100%' }}>Back to sign in</Button>
+              <Alert tone="info">
+                Demo build — no email is sent, so here is the link itself. It is single-use and expires in 60 minutes.
+              </Alert>
+              {resetLink && (
+                <Link to={resetLink} className="ft-btn ft-btn--primary ft-btn--xl" style={{ width: '100%' }}>
+                  Open the reset link
+                </Link>
+              )}
+              <Button variant="ghost" onClick={() => nav('/login')} style={{ width: '100%', marginTop: 'var(--space-2)' }}>
+                Back to sign in
+              </Button>
             </>
           ) : (
             <>
@@ -65,7 +78,7 @@ export function ForgotPassword() {
               <p className="auth-alt">
                 <Link to="/login">Back to sign in</Link>
               </p>
-              <p className="auth-demo-note">Demo build — no email is actually sent. Reset links are logged to the console.</p>
+              <p className="auth-demo-note">Demo build — no email is sent; the reset link appears on the next screen.</p>
             </>
           )}
         </div>

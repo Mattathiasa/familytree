@@ -22,6 +22,7 @@ import { FamilySettings } from '../screens/FamilySettings';
 import { Account } from '../screens/Account';
 import { Memories } from '../screens/Memories';
 import { NotFound } from '../screens/NotFound';
+import { ResetPassword } from '../screens/ResetPassword';
 import { canManage } from '@ft/domain';
 import '../screens/tree.css';
 
@@ -138,6 +139,7 @@ export function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset/:token" element={<ResetPassword />} />
           <Route path="/onboard" element={<Protected><Onboard /></Protected>} />
           <Route path="/invite/:token" element={<Invite />} />
 

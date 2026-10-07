@@ -8,9 +8,10 @@ import {
 import { emptyDb, seedDb, uid, type MockDb } from './mock-db';
 import type {
   ActivityItemDto, ChangeRecordDto, FamilyLineage, FamilyStatsDto, InvitationDto, MemberDto,
-  InvitationPreviewDto, MemoryDto, PersonDto, RelationshipDto, RelativeGroups, SessionUser, StoryDto,
+  InvitationPreviewDto, MemoryDto, NotificationPrefs, PersonDto, RelationshipDto, RelativeGroups, SessionUser, StoryDto,
   TreeResponseDto, UpcomingItemDto,
 } from './types';
+import { DEFAULT_NOTIFICATION_PREFS } from './types';
 
 const KEY = 'ft.mock.db.v1';
 
@@ -121,25 +122,83 @@ export const auth = {
     mutate((d) => { d.user = null; });
   },
 
-  async sendPasswordReset(email: string): Promise<void> {
+  /* FR-4: a single-use, expiring reset token. The screen told the user to
+     "check the console for the token" and nothing was ever logged — the call
+     validated the email format and returned. It now issues a real token with
+     a real lifecycle, which the reset screen consumes.
+
+     The demo surfaces the token because there is no mail transport yet; a
+     backend would send it and this would return nothing. */
+  async sendPasswordReset(email: string): Promise<{ token: string; expiresAt: string }> {
     await delay(300);
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       throw new ApiRequestError('VALIDATION_FAILED', 'Enter a valid email address.');
     }
-    void db;
-    void requireUser;
+    const token = uid().replace(/-/g, '').slice(0, 24);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    mutate((d) => {
+      d.passwordResets = d.passwordResets ?? [];
+      // Requesting a new link invalidates any outstanding one for that address.
+      for (const r of d.passwordResets) if (r.email === email && !r.usedAt) r.usedAt = new Date().toISOString();
+      d.passwordResets.push({ token, email, expiresAt, usedAt: null });
+    });
+    return { token, expiresAt };
   },
 
-  async updateProfile(patch: { displayName?: string; locale?: SessionUser['locale'] }): Promise<SessionUser> {
+  /** Is this reset link still usable? Unauthenticated — the token is the credential. */
+  async checkPasswordReset(token: string): Promise<{ email: string }> {
+    await delay(150);
+    const reset = (db.passwordResets ?? []).find((r) => r.token === token);
+    if (!reset) throw new ApiRequestError('NOT_FOUND', 'This reset link is not valid.');
+    if (reset.usedAt) throw new ApiRequestError('FORBIDDEN', 'This reset link has already been used.');
+    if (Date.parse(reset.expiresAt) < Date.now()) throw new ApiRequestError('FORBIDDEN', 'This reset link has expired.');
+    return { email: reset.email };
+  },
+
+  async completePasswordReset(token: string, newPassword: string): Promise<void> {
+    await delay(300);
+    await this.checkPasswordReset(token);
+    if (newPassword.length < 8) {
+      throw new ApiRequestError('VALIDATION_FAILED', 'Some of the details you entered need attention.', { password: 'Use at least 8 characters.' });
+    }
+    // Single use: spent the moment it succeeds.
+    mutate((d) => {
+      const reset = (d.passwordResets ?? []).find((r) => r.token === token);
+      if (reset) reset.usedAt = new Date().toISOString();
+    });
+  },
+
+  async updateProfile(patch: {
+    displayName?: string;
+    locale?: SessionUser['locale'];
+    notifications?: Partial<NotificationPrefs>;
+  }): Promise<SessionUser> {
     await delay(200);
-    const user = requireUser();
+    requireUser();
     mutate((d) => {
       if (d.user) {
         if (patch.displayName !== undefined) d.user.displayName = patch.displayName;
         if (patch.locale !== undefined) d.user.locale = patch.locale;
+        if (patch.notifications) {
+          d.user.notifications = {
+            ...DEFAULT_NOTIFICATION_PREFS,
+            ...d.user.notifications,
+            ...patch.notifications,
+          };
+        }
       }
     });
     return db.user!;
+  },
+
+  /* Verification mail. The screen's resend button used to be a 500ms
+     setTimeout that reported success having done nothing at all. There is no
+     mail transport yet, so it says what actually happened instead. */
+  async resendVerification(): Promise<{ sent: boolean; reason?: string }> {
+    await delay(300);
+    const user = requireUser();
+    if (user.emailVerified) return { sent: false, reason: 'already-verified' };
+    return { sent: false, reason: 'no-mail-transport' };
   },
 };
 
