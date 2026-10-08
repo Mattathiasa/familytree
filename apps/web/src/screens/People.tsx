@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { personLabel } from '../api/client';
+import { people as peopleApi, personLabel } from '../api/client';
 import type { PersonDto } from '../api/types';
 import { Avatar, Badge, Button, EmptyState, Input, Select, Skeleton } from '@ft/ui';
 import { convertYear, displayName, formatFamilyDate, lifespan, resolveLiving } from '@ft/domain';
@@ -15,9 +15,7 @@ export function People() {
 
   useEffect(() => {
     let alive = true;
-    import('../api/client').then(({ people: api }) =>
-      api.list(familyId!).then((p) => alive && setPeople(p)),
-    );
+    peopleApi.list(familyId!).then((p) => alive && setPeople(p));
     return () => { alive = false; };
   }, [familyId]);
 

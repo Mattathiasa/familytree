@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { people as peopleApi } from '../api/client';
+import { people as peopleApi, relationships } from '../api/client';
 import type { PersonDto } from '../api/types';
 import { Alert, Button, Card, Field, Input, Select, Textarea, useToast } from '@ft/ui';
 import { DateField } from '@ft/ui';
@@ -92,7 +92,6 @@ export function PersonEdit() {
   }
 
   async function familyApiRel(from: string, to: string, kind: 'parent' | 'spouse') {
-    const { relationships } = await import('../api/client');
     await relationships.create(familyId!, { fromPersonId: from, toPersonId: to, kind });
   }
 

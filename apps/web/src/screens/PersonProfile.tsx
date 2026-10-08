@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { canDeletePerson, canEditPerson, family as familyApi, personLabel } from '../api/client';
+import { canDeletePerson, canEditPerson, family as familyApi, people as peopleApi, personLabel } from '../api/client';
 import type { ChangeRecordDto, MemoryDto, PersonDto, RelativeGroups, StoryDto } from '../api/types';
 import { activatable, AudioPlayer, Avatar, Badge, Button, Card, Modal, Skeleton, useToast } from '@ft/ui';
 import { convertYear, formatFamilyDate, lifespan, resolveLiving } from '@ft/domain';
@@ -62,9 +62,9 @@ export function PersonProfile() {
   useEffect(() => {
     let alive = true;
     Promise.all([
-      import('../api/client').then(({ people }) => people.get(familyId!, personId!)),
+      peopleApi.get(familyId!, personId!),
       familyApi.relatives(familyId!, personId!),
-      import('../api/client').then(({ people }) => people.history(familyId!, personId!)),
+      peopleApi.history(familyId!, personId!),
       familyApi.memories(familyId!).catch(() => [] as MemoryDto[]),
       familyApi.stories(familyId!).catch(() => [] as StoryDto[]),
     ])
@@ -81,8 +81,7 @@ export function PersonProfile() {
   }, [familyId, personId]);
 
   async function removePerson() {
-    const { people } = await import('../api/client');
-    await people.remove(familyId!, personId!);
+    await peopleApi.remove(familyId!, personId!);
     toast.push('Person removed.', 'success');
     nav(`/f/${familyId}/people`);
   }

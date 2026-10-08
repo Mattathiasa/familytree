@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { canAddPeople, claimedPerson, family as familyApi, livingStatusOf, livingTally, personLabel } from '../api/client';
+import { canAddPeople, claimedPerson, family as familyApi, livingStatusOf, livingTally, people as peopleApi, personLabel, relationships } from '../api/client';
 import type { PersonDto, RelationshipDto } from '../api/types';
 import { useApp } from '../app/store';
 import { Button, EmptyState, Input, Modal, useToast } from '@ft/ui';
@@ -598,8 +598,7 @@ function AddRelativeModal({
     setBusy(true);
     setError(null);
     try {
-      const { people, relationships } = await import('../api/client');
-      const created = await people.create(familyId, {
+      const created = await peopleApi.create(familyId, {
         givenName: name.trim(),
         birthDate,
         familyName: rel !== 'spouse' ? person.familyName ?? '' : '',

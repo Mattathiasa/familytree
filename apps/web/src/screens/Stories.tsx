@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { family as familyApi, personLabel } from '../api/client';
+import { family as familyApi, people as peopleApi, personLabel } from '../api/client';
 import type { PersonDto, StoryDto } from '../api/types';
 import { useApp } from '../app/store';
 import { activatable, Avatar, Badge, Button, Card, EmptyState, Field, Input, LoadError, Modal, Skeleton, Textarea, useToast } from '@ft/ui';
@@ -26,7 +26,7 @@ export function Stories() {
     setLoadError(false);
     Promise.all([
       familyApi.stories(familyId!),
-      import('../api/client').then(({ people: api }) => api.list(familyId!)),
+      peopleApi.list(familyId!),
     ]).then(([s, p]) => {
       if (!alive) return;
       setStories(s);

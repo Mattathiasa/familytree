@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth, resetDemoData, family as familyApi } from '../api/client';
+import { auth, resetDemoData, family as familyApi, people as peopleApi } from '../api/client';
 import { generateGedcom } from '../api/gedcom';
 import { useApp } from '../app/store';
 import { Avatar, Badge, Button, Card, Field, Input, Select, useToast } from '@ft/ui';
@@ -67,7 +67,6 @@ export function Account() {
     if (!familyId) return;
     setExporting(true);
     try {
-      const { people: peopleApi } = await import('../api/client');
       const [peopleList, treeData] = await Promise.all([
         peopleApi.list(familyId),
         familyApi.tree(familyId),

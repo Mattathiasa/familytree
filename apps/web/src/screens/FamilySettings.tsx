@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '../app/store';
-import { resetDemoData, updateFamilyInDb, familyDbSetCalendar, familyDbSetPhoto, familyDbSetPrivacy, family as familyApi } from '../api/client';
+import { resetDemoData, updateFamilyInDb, familyDbSetCalendar, familyDbSetPhoto, familyDbSetPrivacy, family as familyApi, people as peopleApi } from '../api/client';
 import { generateGedcom } from '../api/gedcom';
 import { Alert, Button, Card, Field, Input, Modal, Select, Textarea, useToast } from '@ft/ui';
 import { readStored } from '../app/storage';
@@ -47,7 +47,6 @@ export function FamilySettings() {
   async function downloadGedcom() {
     setExporting(true);
     try {
-      const { people: peopleApi } = await import('../api/client');
       const [peopleList, treeData] = await Promise.all([
         peopleApi.list(familyId!),
         familyApi.tree(familyId!),
