@@ -158,6 +158,8 @@ Documented before implementation, per spec §67.
 
 Security claims are verified by test, not by review. Each of these is a required test, and a failure blocks the release:
 
+**Status: 5 of these 12 have mock-level tests today** — cross-tenant isolation, visibility and role enforcement, living-person defaults, and draft isolation, in `apps/web/src/api/*.test.ts`. The other seven (CSRF, session revocation, upload sniffing, XSS/CSP, RLS, injection, rate limiting) cannot be tested until the server they defend exists. Until then this list is the acceptance criteria for the backend milestone, not a description of a passing suite.
+
 1. **Cross-tenant isolation** — a member of family A cannot read, write, or infer the existence of any record in family B, by any endpoint, including by direct id.
 2. **Visibility enforcement** — a Viewer cannot fetch a `private` record by id, cannot list it, cannot find it via search, and does not see it in a feed or a count.
 3. **Living-person defaults** — exact dates and private notes of an inferred-living person are withheld from a Viewer.
@@ -181,4 +183,4 @@ Stated plainly rather than left to be discovered.
 - **No malware scanning on upload.** Sniffing catches type confusion, not a malicious file. A Viewer's own bucket is private and signed-URL-only, so this is contained, but a family sharing files widely raises the stakes. Scanning belongs in V1.
 - **Invite links are bearer tokens.** Anyone holding an unaccepted link can accept it. Mitigated by short expiry, single use, and revocation — the link should still be shared over a channel the family trusts.
 - **Rate limiting is per-instance in-process.** Correct at this scale; a shared store is needed before horizontal scaling, and that is a known TODO at the scaling threshold, not a current hole.
-- **No formal third-party penetration test.** The automated suite covers the checklist in §11, but an independent review before inviting real families is the honest bar for a product holding this kind of data.
+- **No formal third-party penetration test.** §11 lists the checklist; today only five items have tests and none run in CI. An independent review before inviting real families is the honest bar for a product holding this kind of data.

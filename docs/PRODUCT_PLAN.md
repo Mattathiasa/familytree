@@ -3,8 +3,10 @@
 > Source brief: `PRODUCT_SPEC.md`. This document records **decisions and scope**, with rationale.
 > Companion docs: `ARCHITECTURE.md`, `DATABASE.md`, `UI_UX.md`, `API.md`, `SECURITY.md`, `TESTING.md`, `ROADMAP.md`.
 
-**Status:** Phase 0 complete — planning. No production code written yet.
-**Last updated:** 2026-09-30
+**Status:** Phases 0–5 built — frontend, domain library and mock data layer, 191 tests green.
+The database, live auth, email and file storage milestones have not started; `ROADMAP.md` marks
+them "Not started" and so should any reader.
+**Last updated:** 2026-10-15
 
 ---
 
@@ -25,7 +27,7 @@ What that means concretely:
 
 There is therefore **no working code to preserve and no architecture to replace.** The spec's "do not destroy working code" instruction is satisfied vacuously. The real risk in a greenfield build of this size is the opposite one: scaffolding everything at once, producing a large surface with nothing proven. That is why the phase plan in `ROADMAP.md` is gated on working, tested increments rather than on file completion.
 
-**Environment note:** this project is currently being built in a temp working directory because the sandbox denied writes to `/Users/mattathiasa/Projects`. It must be moved to `/Users/mattathiasi/Projects/familytree` before anything is committed or deployed. See "Operational risks" below.
+**Environment note:** superseded. The project lives at `/Users/mattathiasa/Projects/familytree` and is committed to git; the sandbox-write problem that motivated this note no longer applies.
 
 ---
 
@@ -237,10 +239,10 @@ AI-assisted transcription and OCR, GEDCOM import, family map, printable family b
 | R-10 | **Wrong data model** for genealogy | Rewrites the core | Person/relationship/place separation per §16, §34, §69; avoid nullable denormalisation |
 | R-11 | **Operational:** project cannot be written to its intended path in this environment | Work is stranded in temp storage | **Resolved 2026-09-30** — the project lives at `/Users/mattathiasa/Projects/familytree` |
 
-### Operational risk (R-11, current)
+### Operational risk (R-11, resolved)
 
-Writes to `/Users/mattathiasi/Projects` are currently denied by the environment. The project is being built at
-`/var/folders/jt/0gpmhbt103b1jsz27091byt40000gn/T/kilo/familytree`, which is temporary and **must not be treated as a home for the work.** First action once access is restored: move the directory, then re-verify the build. Nothing is committed yet, so the move is lossless.
+Closed 2026-09-30. The project lives at `/Users/mattathiasa/Projects/familytree` and is committed to git.
+Nothing further is required here.
 
 ---
 

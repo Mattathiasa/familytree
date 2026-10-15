@@ -157,7 +157,7 @@ Deliberately expressed as capability milestones rather than dates. Dates on a pr
 | Privacy leak | Any phase, catastrophic | Two enforcement layers, 12 release-gating tests, RLS backstop |
 | Media cost | Phase 6+ | Quotas, lifecycle rules, no transcode in MVP; measured before scaling |
 | No one uses it past the tree | Everything after Phase 5 | M3 is a shippable product; later phases are earned by observed demand |
-| Operational (project not yet in its home directory) | **Current** | Move to `/Users/mattathiasi/Projects/familytree` before the first commit — see `PRODUCT_PLAN.md` R-11 |
+| ~~Operational (project not yet in its home directory)~~ | Resolved 2026-09-30 | Project lives at its home path and is committed to git — `PRODUCT_PLAN.md` R-11 |
 
 ---
 

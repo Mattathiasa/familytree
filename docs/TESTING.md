@@ -2,6 +2,12 @@
 
 > Companion: `SECURITY.md` §11 (the release-gating security tests), `PRODUCT_PLAN.md` NFRs (the budgets that must be measured).
 
+**Status: this is the target regime, not the current one.** Today the suite is 191 unit and
+component tests in 13 files, run in about eight seconds against the mock data layer — no database,
+no CI pipeline, no E2E, no coverage gate. The unit and component rows of §2 exist; the integration,
+contract, E2E, accessibility-CI and performance rows are design, written before the backend. The
+layers below describe what each tier must contain when it is built, so the intent survives the gap.
+
 ---
 
 ## 1. Principles
@@ -136,7 +142,7 @@ A **regression baseline** is committed, so the failure is "slower than the recor
 
 ## 9. CI
 
-Every push:
+**Not yet built — there is no pipeline.** The plan, once a backend exists:
 
 ```
 lint · typecheck · unit · integration · contract · component
