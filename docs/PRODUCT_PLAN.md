@@ -1,6 +1,6 @@
 # FamilyTree — Product Plan
 
-> Source brief: `PRODUCT_SPEC.md`. This document records **decisions and scope**, with rationale.
+> Source brief: `BRIEF.md` (the input, kept verbatim). This document records **decisions and scope**, with rationale.
 > Companion docs: `ARCHITECTURE.md`, `DATABASE.md`, `UI_UX.md`, `API.md`, `SECURITY.md`, `TESTING.md`, `ROADMAP.md`.
 
 **Status:** Phases 0–5 built — frontend, domain library and mock data layer, 193 tests green.

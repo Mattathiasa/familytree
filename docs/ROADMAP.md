@@ -30,7 +30,7 @@ Two rules keep this from becoming a 21-feature sprawl:
 so the design, tree engine, and domain rules could be proven before choosing a database host.
 Supabase Postgres is the planned store; wiring it in is a transport swap behind `apps/web/src/api/client.ts`.
 
-**Phases 0 deliverables:** `PRODUCT_SPEC.md` (the brief, as given), `PRODUCT_PLAN.md`, `ARCHITECTURE.md`, `DATABASE.md`, `UI_UX.md`, `API.md`, `SECURITY.md`, `TESTING.md`, `ROADMAP.md`.
+**Phases 0 deliverables:** `BRIEF.md` (the brief, as given), `PRODUCT_PLAN.md`, `ARCHITECTURE.md`, `DATABASE.md`, `UI_UX.md`, `API.md`, `SECURITY.md`, `TESTING.md`, `ROADMAP.md`.
 
 ---
 

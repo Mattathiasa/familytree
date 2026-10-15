@@ -1,3 +1,18 @@
+# FamilyTree — The Brief, As Given
+
+> **What this document is.** The original product brief for FamilyTree, kept verbatim for
+> provenance. It was written as an instruction to whoever would build the thing — every
+> "you" below addresses the builder, not the reader, and the second half of the opening page
+> is addressed to an AI assistant in particular. It is the *input* to this project, not its
+> output, and it is not an engineering document.
+>
+> The decisions that came out of it live elsewhere: scope in `PRODUCT_PLAN.md`, stack in
+> `ARCHITECTURE.md`, and so on down the docs folder. Where this brief and an engineering
+> decision conflict, the decision docs record *why* — that is the whole point of keeping
+> them separate.
+
+---
+
 # FAMILYTREE — COMPLETE PRODUCT PLANNING, DESIGN & BUILD PROMPT
 
 > This is the authoritative product brief for **FamilyTree**.
