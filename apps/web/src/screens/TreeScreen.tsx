@@ -324,6 +324,10 @@ function TreeCanvas({
   const canvasRef = useRef<HTMLDivElement>(null);
   const [t, setT] = useState<Transform>({ x: 40, y: 40, k: 1 });
   const drag = useRef<{ px: number; py: number; tx: number; ty: number } | null>(null);
+  /* State, not drag.current, because it is read in render to kill the
+     transition mid-drag — a ref read during render can go stale. It changes
+     twice per drag, so the extra render costs nothing. */
+  const [dragging, setDragging] = useState(false);
   const [focusedViaKeyboard, setFocusedViaKeyboard] = useState(false);
 
   const fit = useCallback(() => {
@@ -370,13 +374,14 @@ function TreeCanvas({
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
     drag.current = { px: e.clientX, py: e.clientY, tx: t.x, ty: t.y };
+    setDragging(true);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (!drag.current) return;
     setT(clampT({ k: t.k, x: drag.current.tx + (e.clientX - drag.current.px), y: drag.current.ty + (e.clientY - drag.current.py) }));
   };
-  const onPointerUp = () => { drag.current = null; };
+  const onPointerUp = () => { drag.current = null; setDragging(false); };
 
   // Keyboard traversal over visible nodes, ordered by row then x.
   const order = useMemo(
@@ -433,7 +438,7 @@ function TreeCanvas({
           transform: `translate(${t.x}px, ${t.y}px) scale(${t.k})`,
           width: layout.width,
           height: layout.height,
-          transition: reduced || drag.current ? 'none' : 'transform 120ms cubic-bezier(0.2,0.7,0.3,1)',
+          transition: reduced || dragging ? 'none' : 'transform 120ms cubic-bezier(0.2,0.7,0.3,1)',
         }}
         onWheel={onWheel}
         onPointerDown={onPointerDown}

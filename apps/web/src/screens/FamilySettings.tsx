@@ -37,7 +37,7 @@ export function FamilySettings() {
       setSaved(true);
       refresh();
       setTimeout(() => setSaved(false), 2000);
-    } catch (err) {
+    } catch {
       toast.push('Failed to save settings.', 'danger');
     } finally {
       setSaving(false);

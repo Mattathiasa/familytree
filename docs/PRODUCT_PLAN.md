@@ -3,7 +3,7 @@
 > Source brief: `PRODUCT_SPEC.md`. This document records **decisions and scope**, with rationale.
 > Companion docs: `ARCHITECTURE.md`, `DATABASE.md`, `UI_UX.md`, `API.md`, `SECURITY.md`, `TESTING.md`, `ROADMAP.md`.
 
-**Status:** Phases 0–5 built — frontend, domain library and mock data layer, 191 tests green.
+**Status:** Phases 0–5 built — frontend, domain library and mock data layer, 193 tests green.
 The database, live auth, email and file storage milestones have not started; `ROADMAP.md` marks
 them "Not started" and so should any reader.
 **Last updated:** 2026-10-15

@@ -17,7 +17,7 @@ Full product thinking lives in [`docs/`](./docs) — start with `PRODUCT_PLAN.md
 | Design system + tokens (light/dark, 44px targets, reduced-motion) | ✅ `packages/ui` (15 tests green) |
 | Domain logic: dates, Ethiopic⇄Gregorian, names, living-status, permissions, cycle check | ✅ `packages/domain` (58 tests green) |
 | Pure tree layout engine (deterministic, union-based, cycle-safe) | ✅ `apps/web/src/tree` (13 tests green) |
-| Seed integrity + UI primitives under test | ✅ `npm run seed`, jsdom lane (26 tests green) |
+| Seed integrity + UI primitives under test | ✅ `npm run seed`, jsdom lane (28 tests green) |
 | Data-layer behaviour: isolation, invites, claims, reset tokens, audit history | ✅ `apps/web/src/api` (94 tests green) |
 | Screens: landing, auth, families, dashboard, tree, people, profile, add/edit, stories, members, settings, account | ✅ |
 | Tree interaction: pan/zoom/fit, search-to-highlight, ARIA tree + keyboard, list fallback, add-relative popover | ✅ |
@@ -43,10 +43,13 @@ Your edits persist in `localStorage`; **Account → Reset demo data** restores t
 ```bash
 npm run dev         # Vite dev server
 npm run build       # typecheck + production build (apps/web/dist)
-npm test            # Vitest — 191 tests: pure logic in node, components in jsdom
+npm run lint        # eslint — correctness rules; the style rules below are on you
+npm test            # Vitest — 193 tests: pure logic in node, components in jsdom
 npm run typecheck   # strict TS across all three packages
 npm run seed        # assert the demo seed graph is sound (ids, cycles, dates)
 ```
+
+All four (`lint`, `typecheck`, `test`, `build`) run in CI on every push.
 
 ## Structure
 

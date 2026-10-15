@@ -1,5 +1,5 @@
 import type { PersonDto, RelationshipDto } from './types';
-import { toGregorianAnchor } from '@ft/domain';
+import { toGregorianAnchor, type FamilyDate } from '@ft/domain';
 
 const GEDCOM_MONTHS = [
   'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
@@ -59,7 +59,7 @@ export function generateGedcom(
   }
 
   // Find explicit spouse pairs
-  const spousePairs: Array<{ id1: string; id2: string; marriedDate?: any }> = [];
+  const spousePairs: Array<{ id1: string; id2: string; marriedDate?: FamilyDate | null }> = [];
   for (const r of relationships) {
     if (r.kind === 'spouse') {
       const already = spousePairs.some(
@@ -76,7 +76,7 @@ export function generateGedcom(
     husbId?: string;
     wifeId?: string;
     children: string[];
-    marriedDate?: any;
+    marriedDate?: FamilyDate | null;
   }
 
   const famRecords: FamRecord[] = [];

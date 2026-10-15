@@ -2,11 +2,13 @@
 
 > Companion: `SECURITY.md` §11 (the release-gating security tests), `PRODUCT_PLAN.md` NFRs (the budgets that must be measured).
 
-**Status: this is the target regime, not the current one.** Today the suite is 191 unit and
+**Status: this is the target regime, not the current one.** Today the suite is 193 unit and
 component tests in 13 files, run in about eight seconds against the mock data layer — no database,
-no CI pipeline, no E2E, no coverage gate. The unit and component rows of §2 exist; the integration,
-contract, E2E, accessibility-CI and performance rows are design, written before the backend. The
-layers below describe what each tier must contain when it is built, so the intent survives the gap.
+no E2E, no coverage gate. CI (`.github/workflows/ci.yml`) runs lint, typecheck, the unit and
+component suites, and the production build on every push and pull request. The integration,
+contract, E2E, accessibility-CI and performance rows of §2 are design, written before the
+backend; the layers below describe what each tier must contain when it is built, so the intent
+survives the gap.
 
 ---
 
@@ -142,14 +144,16 @@ A **regression baseline** is committed, so the failure is "slower than the recor
 
 ## 9. CI
 
-**Not yet built — there is no pipeline.** The plan, once a backend exists:
+**Built for the frontend; the rest waits on a backend.** `.github/workflows/ci.yml` runs on every
+push and pull request:
 
 ```
-lint · typecheck · unit · integration · contract · component
-  · accessibility (axe) · build · e2e · performance benchmarks
+lint · typecheck · unit · component · build
 ```
 
-Pull requests additionally get a preview environment and a seeded demo family. Nightly runs add a full E2E sweep, dependency audit, and migration apply-and-rollback verification.
+The integration, contract, accessibility, e2e and performance lanes join that line as each is
+built. Pull requests will additionally get a preview environment and a seeded demo family; nightly
+runs will add a full E2E sweep, dependency audit, and migration apply-and-rollback verification.
 
 **A migration must apply cleanly to an empty database *and* roll forward from the previous release's schema.** A migration that only works on a fresh database is not tested.
 
