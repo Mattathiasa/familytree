@@ -14,16 +14,19 @@ Full product thinking lives in [`docs/`](./docs) — start with `PRODUCT_PLAN.md
 
 | Area | State |
 |---|---|
-| Design system + tokens (light/dark, 44px targets, reduced-motion) | ✅ `packages/ui` |
-| Domain logic: dates, Ethiopic⇄Gregorian, names, living-status, permissions, cycle check | ✅ `packages/domain` (55 tests green) |
-| Pure tree layout engine (deterministic, union-based, cycle-safe) | ✅ `apps/web/src/tree` (11 tests green) |
-| Seed integrity + UI primitives under test | ✅ `npm run seed`, jsdom lane (16 tests green) |
+| Design system + tokens (light/dark, 44px targets, reduced-motion) | ✅ `packages/ui` (15 tests green) |
+| Domain logic: dates, Ethiopic⇄Gregorian, names, living-status, permissions, cycle check | ✅ `packages/domain` (58 tests green) |
+| Pure tree layout engine (deterministic, union-based, cycle-safe) | ✅ `apps/web/src/tree` (13 tests green) |
+| Seed integrity + UI primitives under test | ✅ `npm run seed`, jsdom lane (26 tests green) |
+| Data-layer behaviour: isolation, invites, claims, reset tokens, audit history | ✅ `apps/web/src/api` (94 tests green) |
 | Screens: landing, auth, families, dashboard, tree, people, profile, add/edit, stories, members, settings, account | ✅ |
 | Tree interaction: pan/zoom/fit, search-to-highlight, ARIA tree + keyboard, list fallback, add-relative popover | ✅ |
 | Database, file storage, email, worker | ⬜ next milestone (Supabase Postgres planned) |
 
-The app currently runs on a **mock data layer** (`apps/web/src/api/client.ts`) that mirrors the
-API contracts in `docs/API.md` — so wiring a real backend is a transport swap, not a rewrite.
+The app currently runs on a **mock data layer** (`apps/web/src/api/client.ts`) whose DTOs and error
+codes mirror the contracts in `docs/API.md`. It covers the ~40 endpoints the screens actually call —
+pagination, media, notifications and search are documented but not yet implemented — so a real
+backend replaces the transport and fills in the rest, rather than forcing a rewrite.
 
 ## Run it
 
@@ -40,7 +43,7 @@ Your edits persist in `localStorage`; **Account → Reset demo data** restores t
 ```bash
 npm run dev         # Vite dev server
 npm run build       # typecheck + production build (apps/web/dist)
-npm test            # Vitest — 82 tests: pure logic in node, components in jsdom
+npm test            # Vitest — 191 tests: pure logic in node, components in jsdom
 npm run typecheck   # strict TS across all three packages
 npm run seed        # assert the demo seed graph is sound (ids, cycles, dates)
 ```
