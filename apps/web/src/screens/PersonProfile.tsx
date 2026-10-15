@@ -81,7 +81,13 @@ export function PersonProfile() {
   }, [familyId, personId]);
 
   async function removePerson() {
-    await peopleApi.remove(familyId!, personId!);
+    try {
+      await peopleApi.remove(familyId!, personId!);
+    } catch {
+      toast.push('We couldn\'t remove this person. Try again.', 'danger');
+      setConfirmDelete(false);
+      return;
+    }
     toast.push('Person removed.', 'success');
     nav(`/f/${familyId}/people`);
   }

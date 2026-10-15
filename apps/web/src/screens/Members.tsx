@@ -39,19 +39,34 @@ export function Members() {
   // which also stops a Viewer's client from ever fetching the member list.
 
   async function changeRole(userId: string, role: Role) {
-    await familyApi.changeRole(familyId!, userId, role);
+    try {
+      await familyApi.changeRole(familyId!, userId, role);
+    } catch {
+      toast.push('We couldn\'t change that role. Try again.', 'danger');
+      return;
+    }
     toast.push('Role updated.', 'success');
     setMembers(await familyApi.members(familyId!));
   }
 
   async function removeMember(m: MemberDto) {
-    await familyApi.removeMember(familyId!, m.userId);
+    try {
+      await familyApi.removeMember(familyId!, m.userId);
+    } catch {
+      toast.push('We couldn\'t remove that member. Try again.', 'danger');
+      return;
+    }
     toast.push(`${m.name} removed from the family.`, 'success');
     setMembers(await familyApi.members(familyId!));
   }
 
   async function revoke(inv: InvitationDto) {
-    await familyApi.revokeInvitation(familyId!, inv.id);
+    try {
+      await familyApi.revokeInvitation(familyId!, inv.id);
+    } catch {
+      toast.push('We couldn\'t revoke that invitation. Try again.', 'danger');
+      return;
+    }
     toast.push('Invitation revoked.', 'success');
     setInvites(await familyApi.invitations(familyId!));
   }

@@ -854,14 +854,10 @@ export function claimedPerson(list: PersonDto[], user: SessionUser | null): Pers
 
 /** Adding a person is a write on the family, not on any existing record. */
 export function canAddPeople(role: Role | null): boolean {
-  return roleAtLeastHelper(role, 'contributor');
+  return role ? roleAtLeast(role, 'contributor') : false;
 }
 
 export function canDeletePerson(role: Role | null, p: PersonDto, user: SessionUser | null): boolean {
   if (!role || !user) return false;
   return can('delete', { role, visibility: p.visibility, isAuthor: p.createdBy === user.id });
-}
-
-export function roleAtLeastHelper(role: Role | null, min: Role): boolean {
-  return role ? roleAtLeast(role, min) : false;
 }

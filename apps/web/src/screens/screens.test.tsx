@@ -5,13 +5,13 @@
    call that throws would all have shipped silently. Each test mounts the real
    screen against the real mock client and waits for its loaded state. */
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ToastProvider } from '@ft/ui';
 import { AppProvider } from '../app/store';
 import { RequireFamily } from '../app/guards';
-import { resetDemoData } from '../api/client';
+import { family as familyApi, resetDemoData } from '../api/client';
 
 import { Dashboard } from './Dashboard';
 import { Memories } from './Memories';
@@ -24,6 +24,7 @@ import { FamilySettings } from './FamilySettings';
 import { Account } from './Account';
 import { Families } from './Families';
 import { NotFound } from './NotFound';
+import { TreeScreen } from './TreeScreen';
 
 function mount(path: string, pattern: string, element: React.ReactNode) {
   const guarded = pattern.startsWith('/f/:familyId')
@@ -44,6 +45,10 @@ function mount(path: string, pattern: string, element: React.ReactNode) {
 
 beforeEach(() => {
   resetDemoData();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('screens mount and reach their loaded state', () => {
@@ -109,5 +114,21 @@ describe('screens mount and reach their loaded state', () => {
   it('NotFound says the address does not exist', async () => {
     mount('/nonsense', '/nonsense', <NotFound />);
     expect(await screen.findByText(/nothing at this address/i)).toBeTruthy();
+  });
+
+  it('TreeScreen renders the seeded tree', async () => {
+    mount('/f/fam-1/tree', '/f/:familyId/tree', <TreeScreen />);
+    expect(await screen.findByLabelText('Search the tree — matching people are highlighted and others dimmed')).toBeTruthy();
+  });
+
+  /* Regression: a rejected tree load used to set people to [] while leaving
+     rels null, so the null guard rendered the loading skeleton forever with
+     no message. The failure must surface an error with a retry instead. */
+  it('TreeScreen shows an error with a retry when the tree fails to load', async () => {
+    vi.spyOn(familyApi, 'tree').mockRejectedValueOnce(new Error('network down'));
+    mount('/f/fam-1/tree', '/f/:familyId/tree', <TreeScreen />);
+    expect(await screen.findByText(/couldn't load this family tree/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
+    expect(document.querySelector('.tree-skeleton')).toBeNull();
   });
 });

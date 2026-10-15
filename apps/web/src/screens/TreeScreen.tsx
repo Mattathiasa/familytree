@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { canAddPeople, claimedPerson, family as familyApi, livingStatusOf, livingTally, people as peopleApi, personLabel, relationships } from '../api/client';
 import type { PersonDto, RelationshipDto } from '../api/types';
 import { useApp } from '../app/store';
-import { Button, EmptyState, Input, Modal, useToast } from '@ft/ui';
+import { Button, EmptyState, Input, LoadError, Modal, useToast } from '@ft/ui';
 import { kinshipLabel, type FamilyDate, type GraphEdge } from '@ft/domain';
 import {
   layoutTree, treePersonLabel, treePersonLifespan,
@@ -54,6 +54,8 @@ export function TreeScreen() {
 
   const [people, setPeople] = useState<PersonDto[] | null>(null);
   const [rels, setRels] = useState<RelationshipDto[] | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
   const [direction, setDirection] = useState<'descendant' | 'ancestor'>('descendant');
   const [selectedId, setSelectedId] = useState<string | null>(params.get('focus'));
   const [query, setQuery] = useState('');
@@ -81,13 +83,19 @@ export function TreeScreen() {
 
   useEffect(() => {
     let alive = true;
+    setLoadError(false);
     familyApi.tree(familyId!).then((t) => {
       if (!alive) return;
       setPeople(t.nodes);
       setRels(t.edges);
-    }).catch(() => alive && setPeople([]));
+    }).catch(() => {
+      /* Leave people and rels as they were — the null guard below is the
+         loading state, so a failed load must not fall through it as an
+         "empty family" and strand the skeleton on screen forever. */
+      if (alive) setLoadError(true);
+    });
     return () => { alive = false; };
-  }, [familyId]);
+  }, [familyId, reloadToken]);
 
   const livingCounts = useMemo(() => livingTally(people ?? []), [people]);
 
@@ -112,6 +120,16 @@ export function TreeScreen() {
   }, [people, rels, treePeople, treeEdges, direction, selectedId]);
 
   if (people === null || rels === null) {
+    if (loadError) {
+      return (
+        <div className="tree-wrap">
+          <LoadError
+            message="We couldn't load this family tree."
+            onRetry={() => setReloadToken((t) => t + 1)}
+          />
+        </div>
+      );
+    }
     return (
       <div className="tree-wrap" aria-busy="true">
         <div className="tree-skeleton" />
@@ -245,7 +263,6 @@ export function TreeScreen() {
 
       {selectedId && viewMode !== 'list' && (
         <SelectionPopover
-          familyId={familyId!}
           person={people.find((p) => p.id === selectedId) ?? null}
           meId={meId}
           edges={treeEdges}
@@ -269,8 +286,11 @@ export function TreeScreen() {
         onDone={(id) => {
           setAddTarget(null);
           setSelectedId(id);
-          // refresh
-          familyApi.tree(familyId!).then((t) => { setPeople(t.nodes); setRels(t.edges); });
+          // The person was created but this refresh can still fail; the
+          // modal already confirmed the save, so a refusal here is a
+          // notice, not an error state for the whole screen.
+          familyApi.tree(familyId!).then((t) => { setPeople(t.nodes); setRels(t.edges); })
+            .catch(() => toast.push('Your relative was added, but the tree couldn\'t refresh. Reload to see them.', 'danger'));
         }}
       />
 
@@ -391,7 +411,6 @@ function TreeCanvas({
     `${p.givenName ?? ''} ${p.familyName ?? ''} ${p.nickname ?? ''}`.toLowerCase().includes(needle);
 
   const W = 168, H = 64;
-  const showToolbarZoom = true;
 
   return (
     <div className="tree-wrap" ref={wrapRef}>
@@ -506,7 +525,6 @@ function TreeCanvas({
           ? `Selected ${personLabel(people.find((p) => p.id === selectedId)!)}`
           : ''}
       </div>
-      {showToolbarZoom && null}
     </div>
   );
 }
@@ -524,9 +542,8 @@ function matchesEdge(e: PositionedEdge, layout: LayoutResult, needle: string): b
 /* ------------------------------------------------------------------ */
 
 function SelectionPopover({
-  familyId, person, meId, edges, onClose, onOpen, onAdd, canWrite,
+  person, meId, edges, onClose, onOpen, onAdd, canWrite,
 }: {
-  familyId: string;
   person: PersonDto | null;
   /** The person record the signed-in account has claimed, or null. */
   meId: string | null;
@@ -544,7 +561,6 @@ function SelectionPopover({
   const kin = meId && meId !== person.id
     ? kinshipLabel(edges.map((e) => ({ from: e.from, to: e.to, kind: e.kind })) as GraphEdge[], meId, person.id)
     : null;
-  void familyId;
   return (
     <div className="tree-popover" role="dialog" aria-label={`${personLabel(person)} — quick actions`}>
       <div className="tree-popover-head">
