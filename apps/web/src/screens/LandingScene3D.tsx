@@ -226,7 +226,7 @@ function LivingTreeScene({ setActiveNode }: { setActiveNode: (n: AncestorNode | 
           // Rotate around y as visitor scrolls through chapters
           treeGroupRef.current.rotation.y = self.progress * Math.PI * 1.5;
           // Camera view pans from canopy to middle branches
-          treeGroupRef.current.position.y = -2.2 + self.progress * 4.5;
+          treeGroupRef.current.position.y = -3.8 + self.progress * 4.5;
         },
       });
     });
@@ -247,7 +247,7 @@ function LivingTreeScene({ setActiveNode }: { setActiveNode: (n: AncestorNode | 
   });
 
   return (
-    <group ref={treeGroupRef} position={[0, -2.2, 0]}>
+    <group ref={treeGroupRef} position={[0, -3.8, -2]}>
       <Float speed={1.2} rotationIntensity={0.2} floatIntensity={0.3}>
         <TreeBranches />
         {GENERATION_NODES.map((node) => (
@@ -301,7 +301,7 @@ export function LandingCanvas() {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <Canvas
-        camera={{ position: [0, 2.5, 17], fov: 46 }}
+        camera={{ position: [0, 2.0, 21], fov: 46 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
         dpr={[1, 2]}
