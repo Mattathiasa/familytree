@@ -233,7 +233,7 @@ export function Dashboard() {
           </Card>
 
           <Card ref={onboardingRef} className="glass-panel">
-            <OnboardingChecklist familyId={familyId} />
+            <OnboardingChecklist stats={stats} />
           </Card>
         </div>
       </div>
@@ -241,27 +241,32 @@ export function Dashboard() {
   );
 }
 
-function OnboardingChecklist({ familyId }: { familyId: string | undefined }) {
+/* Every tick here is derived from the family's real stats. An earlier version
+   hardcoded two of the four as done and one as permanently impossible (a voice
+   clip the product cannot record), so the checklist was decoration rather than
+   a record of what you have actually preserved. */
+function OnboardingChecklist({ stats }: { stats: FamilyStatsDto | null }) {
   const [dismissed, setDismissed] = useState(() => readStored('ft.onboarding.done') === '1');
-  const [peopleCount, setPeopleCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    familyApi.stats(familyId!).then((s) => setPeopleCount(s.people));
-  }, [familyId]);
 
   if (dismissed) return null;
-  const hasPeople = (peopleCount ?? 0) > 2;
+  if (!stats) {
+    return <div aria-busy="true"><Skeleton /></div>;
+  }
   const steps = [
     { done: true, label: 'Create your family' },
-    { done: hasPeople, label: 'Add at least 3 relatives' },
-    { done: true, label: 'Explore the 3D Constellation tree' },
-    { done: false, label: 'Record your first oral history voice clip' },
+    { done: stats.people >= 3, label: 'Add at least 3 relatives' },
+    { done: stats.stories > 0, label: 'Write your first story' },
+    { done: stats.photos > 0, label: 'Add a photo to the vault' },
   ];
+  const remaining = steps.filter((s) => !s.done).length;
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h3 className="font-display" style={{ margin: 0, fontSize: '1.25rem' }}>Preservation Checklist</h3>
+        <h3 className="font-display" style={{ margin: 0, fontSize: '1.25rem' }}>
+          Preservation Checklist
+          {remaining > 0 && <span className="muted small" style={{ marginLeft: 8, fontWeight: 400 }}>{remaining} to go</span>}
+        </h3>
         <button
           className="ft-btn ft-btn--ghost"
           style={{ fontSize: '0.75rem', padding: '4px 8px' }}

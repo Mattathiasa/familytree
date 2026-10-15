@@ -350,8 +350,8 @@ export function Memories() {
 
       <Modal open={deleting !== null} onClose={() => setDeleting(null)} title={`Remove “${deleting?.title ?? ''}”?`}>
         <p className="muted">
-          This removes <strong>{deleting?.title}</strong> from the family vault, along with the people
-          tagged in it. The file itself is not recoverable from here.
+          This removes <strong>{deleting?.title}</strong> from the family vault. The people tagged in
+          it stay in the tree — only the link to this item goes.
         </p>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <Button variant="ghost" onClick={() => setDeleting(null)}>Keep it</Button>
@@ -387,24 +387,26 @@ function AddMemoryModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Quick preset samples for convenient adding
-  function applyPreset(presetType: 'photo' | 'audio' | 'document') {
-    setType(presetType);
-    if (presetType === 'photo') {
-      setTitle('Family Gathering in Addis Ababa');
-      setUrl('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80');
-      setDateLabel('c. 1985');
-      setLocation('Addis Ababa');
-    } else if (presetType === 'audio') {
-      setTitle('Elder Story: Memories of the Old Market');
-      setUrl('https://cdn.freesound.org/previews/512/512689_11200236-lq.mp3');
-      setDateLabel('2014');
-      setLocation('Gondar, Ethiopia');
+  /* A sample entry, for trying the form without inventing a URL. It fills
+     empty fields only and never overwrites something the user typed — these
+     buttons used to masquerade as type selectors while clobbering the whole
+     form with stock content. */
+  function fillSample() {
+    if (type === 'photo') {
+      if (!title.trim()) setTitle('Family Gathering in Addis Ababa');
+      if (!url.trim()) setUrl('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80');
+      if (!dateLabel.trim()) setDateLabel('c. 1985');
+      if (!location.trim()) setLocation('Addis Ababa');
+    } else if (type === 'audio') {
+      if (!title.trim()) setTitle('Elder Story: Memories of the Old Market');
+      if (!url.trim()) setUrl('https://cdn.freesound.org/previews/512/512689_11200236-lq.mp3');
+      if (!dateLabel.trim()) setDateLabel('2014');
+      if (!location.trim()) setLocation('Gondar, Ethiopia');
     } else {
-      setTitle('Ancestral Land Deed & Seal');
-      setUrl('https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80');
-      setDateLabel('1952');
-      setLocation('Shoa Province');
+      if (!title.trim()) setTitle('Ancestral Land Deed & Seal');
+      if (!url.trim()) setUrl('https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80');
+      if (!dateLabel.trim()) setDateLabel('1952');
+      if (!location.trim()) setLocation('Shoa Province');
     }
   }
 
@@ -421,7 +423,6 @@ function AddMemoryModal({
         description: description.trim(),
         type,
         url: url.trim(),
-        audioDuration: type === 'audio' ? '03:15' : undefined,
         dateLabel: dateLabel.trim() || undefined,
         location: location.trim() || undefined,
         personIds: selectedPeople,
@@ -437,15 +438,20 @@ function AddMemoryModal({
   return (
     <Modal open={open} onClose={onClose} title="Add to Family Vault">
       <form onSubmit={submit} style={{ display: 'grid', gap: '16px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <Button size="sm" variant={type === 'photo' ? 'primary' : 'secondary'} onClick={() => applyPreset('photo')}>
-            📷 Photo
-          </Button>
-          <Button size="sm" variant={type === 'audio' ? 'primary' : 'secondary'} onClick={() => applyPreset('audio')}>
-            🎙️ Audio Memory
-          </Button>
-          <Button size="sm" variant={type === 'document' ? 'primary' : 'secondary'} onClick={() => applyPreset('document')}>
-            📜 Document
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {(['photo', 'audio', 'document'] as const).map((t) => (
+            <Button
+              key={t}
+              size="sm"
+              variant={type === t ? 'primary' : 'secondary'}
+              onClick={() => setType(t)}
+              aria-pressed={type === t}
+            >
+              {t === 'photo' ? '📷 Photo' : t === 'audio' ? '🎙️ Audio Memory' : '📜 Document'}
+            </Button>
+          ))}
+          <Button size="sm" variant="ghost" onClick={fillSample}>
+            Fill with a sample
           </Button>
         </div>
 

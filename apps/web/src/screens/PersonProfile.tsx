@@ -441,8 +441,8 @@ export function PersonProfile() {
       {/* Removal Confirmation Modal */}
       <Modal open={confirmDelete} onClose={() => setConfirmDelete(false)} title={`Remove ${name}?`}>
         <p>
-          This removes <strong>{name}</strong> and their relationship links from the current tree.
-          In the full build, removal is reversible for 30 days.
+          This permanently removes <strong>{name}</strong> and their relationship links from the tree.
+          There is no undo in this build — the 30-day recovery window arrives with the server.
         </p>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 'var(--space-4)' }}>
           <Button variant="ghost" onClick={() => setConfirmDelete(false)}>Keep</Button>
