@@ -100,7 +100,7 @@ export function Landing() {
       </div>
 
       {/* Atmospheric Glowing Orbs */}
-      <div className="orb orb--primary" style={{ top: '8%', left: '50%', transform: 'translateX(-50%)' }} />
+      <div className="orb orb--primary" style={{ top: '8%', left: '50%', transform: 'translateX(-50%)', opacity: 0.22 }} />
       <div className="orb orb--secondary" style={{ top: '45%', right: '-8%', width: '450px', height: '450px' }} />
       <div className="orb orb--primary" style={{ top: '80%', left: '-6%', width: '500px', height: '500px', opacity: 0.45 }} />
 
